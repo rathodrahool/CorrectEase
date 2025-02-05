@@ -7,13 +7,13 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-gray-50">
       <Navigation />
       <div className="flex-1 flex flex-col">
-        <header className="h-14 border-b border-gray-200 px-6 flex items-center bg-white">
+        <header className="h-16 border-b border-gray-200 px-8 flex items-center bg-white shadow-sm sticky top-0 z-10">
           {/* Header content */}
         </header>
-        <main className="flex-1 p-6 bg-gray-50">{children}</main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );
