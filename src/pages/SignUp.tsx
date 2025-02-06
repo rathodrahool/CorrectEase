@@ -1,5 +1,12 @@
 import React from "react";
-import { FiUser, FiMail, FiLock, FiArrowRight } from "react-icons/fi";
+import {
+  FiUser,
+  FiMail,
+  FiLock,
+  FiArrowRight,
+  FiEye,
+  FiEyeOff,
+} from "react-icons/fi";
 import { useNavigate, Link } from "react-router-dom";
 
 const SignUp: React.FC = () => {
@@ -10,6 +17,7 @@ const SignUp: React.FC = () => {
     password: "",
   });
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,17 +100,28 @@ const SignUp: React.FC = () => {
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A869A]" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="w-full pl-10 pr-3 py-2 border border-[#DFE1E6] rounded-sm
+                  className="w-full pl-10 pr-12 py-2 border border-[#DFE1E6] rounded-sm
                     focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
                   placeholder="Create a secure password"
                   minLength={8}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A869A] hover:text-[#42526E] transition-colors"
+                >
+                  {showPassword ? (
+                    <FiEyeOff className="w-4 h-4" />
+                  ) : (
+                    <FiEye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 
