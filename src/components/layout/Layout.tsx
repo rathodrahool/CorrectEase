@@ -2,6 +2,7 @@ import React from "react";
 import Navigation, { ActiveTab } from "../navigation/Navigation";
 import Editor from "../editor/Editor";
 import CorrectionHistory from "../history/CorrectionHistory";
+import { FiSettings, FiUser } from "react-icons/fi"; // Add this import
 
 const Layout: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("editor");
@@ -27,8 +28,33 @@ const Layout: React.FC = () => {
               ? "CorrectEase Editor"
               : `CorrectEase History ${activeUserId ? "- Corrections" : ""}`}
           </h1>
-          <div className="text-sm text-[#42526E]">
-            AI-Powered Text Enhancement
+          <div className="flex items-center gap-4">
+            <button
+              className="p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative"
+              aria-label="Settings"
+            >
+              <FiSettings className="w-5 h-5" />
+              <span
+                className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 
+                bg-[#172B4D] text-white text-xs py-1 px-2 rounded opacity-0 
+                group-hover:opacity-100 transition-opacity whitespace-nowrap"
+              >
+                Settings
+              </span>
+            </button>
+            <button
+              className="p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative"
+              aria-label="Profile"
+            >
+              <FiUser className="w-5 h-5" />
+              <span
+                className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 
+                bg-[#172B4D] text-white text-xs py-1 px-2 rounded opacity-0 
+                group-hover:opacity-100 transition-opacity whitespace-nowrap"
+              >
+                Profile
+              </span>
+            </button>
           </div>
         </header>
         <main className="flex-1 overflow-auto relative z-10">
