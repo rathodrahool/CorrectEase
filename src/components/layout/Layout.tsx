@@ -2,35 +2,56 @@ import React from "react";
 import Navigation, { ActiveTab } from "../navigation/Navigation";
 import Editor from "../editor/Editor";
 import CorrectionHistory from "../history/CorrectionHistory";
-import { FiSettings, FiUser } from "react-icons/fi"; // Add this import
+import Settings from "../settings/Settings";
+import { FiSettings, FiUser } from "react-icons/fi";
 
 const Layout: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("editor");
   const [activeUserId, setActiveUserId] = React.useState<string>("");
+  const [showSettings, setShowSettings] = React.useState(false);
 
   const handleUserSelect = (userId: string) => {
     setActiveUserId(userId);
     setActiveTab("history");
+    setShowSettings(false);
+  };
+
+  const renderMainContent = () => {
+    if (showSettings) {
+      return <Settings />;
+    }
+    return activeTab === "editor" ? (
+      <Editor activeUserId={activeUserId} />
+    ) : (
+      <CorrectionHistory userId={activeUserId} />
+    );
   };
 
   return (
     <div className="flex min-h-screen bg-[#FAFBFC] relative">
       <Navigation
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setShowSettings(false);
+        }}
         activeUserId={activeUserId}
         onUserSelect={handleUserSelect}
       />
       <div className="flex-1 flex flex-col">
         <header className="h-14 border-b border-[#DFE1E6] px-6 flex items-center justify-between bg-white sticky top-0 z-20">
           <h1 className="text-lg font-medium text-[#172B4D]">
-            {activeTab === "editor"
+            {showSettings
+              ? "Settings"
+              : activeTab === "editor"
               ? "CorrectEase Editor"
               : `CorrectEase History ${activeUserId ? "- Corrections" : ""}`}
           </h1>
           <div className="flex items-center gap-4">
             <button
-              className="p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative"
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative
+                ${showSettings ? "bg-[#DEEBFF] text-[#0052CC]" : ""}`}
               aria-label="Settings"
             >
               <FiSettings className="w-5 h-5" />
@@ -58,11 +79,7 @@ const Layout: React.FC = () => {
           </div>
         </header>
         <main className="flex-1 overflow-auto relative z-10">
-          {activeTab === "editor" ? (
-            <Editor activeUserId={activeUserId} />
-          ) : (
-            <CorrectionHistory userId={activeUserId} />
-          )}
+          {renderMainContent()}
         </main>
       </div>
     </div>
