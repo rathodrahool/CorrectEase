@@ -1,19 +1,15 @@
 import React from "react";
 import Navigation, { ActiveTab } from "../navigation/Navigation";
 import Editor from "../editor/Editor";
-import Chat from "../chat/Chat";
+import CorrectionHistory from "../history/CorrectionHistory";
 
-interface LayoutProps {
-  children?: React.ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = () => {
+const Layout: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("editor");
-  const [activeChat, setActiveChat] = React.useState<string>("");
+  const [activeUserId, setActiveUserId] = React.useState<string>("");
 
-  const handleChatSelect = (chatId: string) => {
-    setActiveChat(chatId);
-    setActiveTab("chat");
+  const handleUserSelect = (userId: string) => {
+    setActiveUserId(userId);
+    setActiveTab("history");
   };
 
   return (
@@ -21,20 +17,22 @@ const Layout: React.FC<LayoutProps> = () => {
       <Navigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        activeChat={activeChat}
-        onChatSelect={handleChatSelect}
+        activeUserId={activeUserId}
+        onUserSelect={handleUserSelect}
       />
       <div className="flex-1 flex flex-col">
         <header className="h-14 border-b border-[#DFE1E6] px-6 flex items-center bg-white sticky top-0 z-20">
           <h1 className="text-lg font-medium text-[#172B4D]">
-            {activeTab === "editor" ? "Text Editor" : "Chat History"}
+            {activeTab === "editor"
+              ? "Text Editor"
+              : `Text Corrections ${activeUserId ? "- History" : ""}`}
           </h1>
         </header>
         <main className="flex-1 overflow-auto relative z-10">
           {activeTab === "editor" ? (
-            <Editor />
+            <Editor activeUserId={activeUserId} />
           ) : (
-            <Chat activeChatId={activeChat} />
+            <CorrectionHistory userId={activeUserId} />
           )}
         </main>
       </div>

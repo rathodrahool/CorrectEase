@@ -8,13 +8,13 @@ import {
 } from "react-icons/fi";
 import CreateChatModal from "../modals/CreateChatModal";
 
-export type ActiveTab = "editor" | "chat";
+export type ActiveTab = "editor" | "history";
 
 interface NavigationProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
-  activeChat: string;
-  onChatSelect: (chatId: string) => void;
+  activeUserId: string;
+  onUserSelect: (userId: string) => void;
 }
 
 interface ChatUser {
@@ -66,8 +66,8 @@ const mockChats: ChatUser[] = [
 const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onTabChange,
-  activeChat,
-  onChatSelect,
+  activeUserId,
+  onUserSelect,
 }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [chats, setChats] = React.useState<ChatUser[]>(mockChats);
@@ -101,16 +101,16 @@ const Navigation: React.FC<NavigationProps> = ({
             <span>Editor</span>
           </button>
           <button
-            onClick={() => onTabChange("chat")}
+            onClick={() => onTabChange("history")}
             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-colors
               ${
-                activeTab === "chat"
+                activeTab === "history"
                   ? "bg-[#DEEBFF] text-[#0052CC]"
                   : "text-[#42526E] hover:bg-[#F4F5F7]"
               }`}
           >
             <FiMessageSquare className="w-4 h-4" />
-            <span>Chats</span>
+            <span>History</span>
           </button>
         </div>
         <div className="flex items-center bg-white rounded-sm border border-[#DFE1E6] hover:border-[#2684FF] focus-within:border-[#2684FF] focus-within:shadow-[0_0_0_2px_rgba(38,132,255,0.2)]">
@@ -138,48 +138,48 @@ const Navigation: React.FC<NavigationProps> = ({
         <div className="px-4 py-2">
           <h3 className="flex items-center text-xs font-medium text-[#42526E] mb-3 uppercase tracking-wide">
             <FiMessageSquare className="w-4 h-4 mr-2" />
-            <span>Recent Chats</span>
+            <span>Recent Corrections</span>
           </h3>
           <ul className="space-y-1">
-            {chats.map((chat) => (
+            {chats.map((user) => (
               <li
-                key={chat.id}
-                onClick={() => onChatSelect(chat.id)}
+                key={user.id}
+                onClick={() => onUserSelect(user.id)}
                 className={`flex items-center p-2 rounded-sm cursor-pointer transition-colors
                   ${
-                    activeChat === chat.id
+                    activeUserId === user.id
                       ? "bg-[#DEEBFF]"
                       : "hover:bg-[#F4F5F7]"
                   }`}
               >
                 <div className="relative">
                   <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium text-sm">
-                    {chat.avatar || chat.name.charAt(0)}
+                    {user.avatar || user.name.charAt(0)}
                   </div>
-                  {chat.online && (
+                  {user.online && (
                     <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#2684FF] rounded-full border-2 border-white" />
                   )}
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-[#172B4D] truncate">
-                      {chat.name}
+                      {user.name}
                     </span>
-                    {chat.timestamp && (
+                    {user.timestamp && (
                       <span className="text-xs text-[#7A869A]">
-                        {chat.timestamp}
+                        {user.timestamp}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-[#7A869A] truncate">
-                    {chat.jobProfile}
+                    {user.jobProfile}
                   </p>
-                  {chat.lastMessage && (
+                  {user.lastMessage && (
                     <p className="text-xs text-[#7A869A] truncate flex items-center gap-1">
-                      {chat.savedTexts && chat.savedTexts.length > 0 && (
+                      {user.savedTexts && user.savedTexts.length > 0 && (
                         <FiCheckCircle className="w-3 h-3 text-[#0052CC]" />
                       )}
-                      {chat.lastMessage}
+                      {user.lastMessage}
                     </p>
                   )}
                 </div>
