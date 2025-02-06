@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const OTPVerification: React.FC = () => {
   const [otp, setOtp] = React.useState<string[]>(Array(6).fill(""));
@@ -48,15 +48,16 @@ const OTPVerification: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAFBFC] flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto p-6">
-        {/* Logo and Project Name */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <Link
+          to="/"
+          className="flex items-center justify-center gap-3 mb-8 group"
+        >
           <div className="w-12 h-12 bg-[#0052CC] rounded-sm flex items-center justify-center text-white font-bold text-2xl">
             CE
           </div>
           <h1 className="text-2xl font-bold text-[#172B4D]">CorrectEase</h1>
-        </div>
+        </Link>
 
-        {/* OTP Form */}
         <div className="bg-white border border-[#DFE1E6] rounded-sm shadow-sm p-6">
           <h2 className="text-center text-xl font-semibold text-[#172B4D] mb-2">
             Verify Your Email
@@ -98,10 +99,21 @@ const OTPVerification: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
-            <button className="text-sm text-[#0052CC] hover:underline">
-              Didn't receive the code? Resend
+          <div className="mt-6 text-center space-y-4">
+            <button
+              className="text-sm text-[#0052CC] hover:underline"
+              onClick={() => {
+                /* Resend logic */
+              }}
+            >
+              Didn't receive the code?
             </button>
+            <Link
+              to="/signup"
+              className="block text-sm text-[#7A869A] hover:text-[#42526E]"
+            >
+              Change email address
+            </Link>
           </div>
         </div>
       </div>

@@ -1,11 +1,10 @@
 import React from "react";
-import { FiUser, FiMail, FiLock, FiArrowRight } from "react-icons/fi";
-import { useNavigate, Link } from "react-router-dom";
+import { FiMail, FiLock, FiArrowRight } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
 
-const SignUp: React.FC = () => {
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = React.useState({
-    fullName: "",
     email: "",
     password: "",
   });
@@ -15,11 +14,11 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      console.log("Signing up with:", formData);
+      console.log("Logging in with:", formData);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate("/verify-otp"); // Redirect to OTP verification page
+      navigate("/"); // Redirect to main app after successful login
     } catch (error) {
-      console.error("Signup failed:", error);
+      console.error("Login failed:", error);
     } finally {
       setIsLoading(false);
     }
@@ -33,38 +32,20 @@ const SignUp: React.FC = () => {
           to="/"
           className="flex items-center justify-center gap-3 mb-8 group"
         >
-          <div className="w-12 h-12 bg-[#0052CC] rounded-sm flex items-center justify-center text-white font-bold text-2xl">
+          <div className="w-12 h-12 bg-[#0052CC] rounded-sm flex items-center justify-center text-white font-bold text-2xl group-hover:bg-[#0065FF] transition-colors">
             CE
           </div>
-          <h1 className="text-2xl font-bold text-[#172B4D]">CorrectEase</h1>
+          <h1 className="text-2xl font-bold text-[#172B4D] group-hover:text-[#0052CC] transition-colors">
+            CorrectEase
+          </h1>
         </Link>
 
+        {/* Login Form */}
         <div className="bg-white border border-[#DFE1E6] rounded-sm shadow-sm p-6">
           <h2 className="text-xl font-semibold text-[#172B4D] mb-6 text-center">
-            Create your account
+            Welcome back
           </h2>
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#172B4D]">
-                Full Name
-              </label>
-              <div className="relative">
-                <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A869A]" />
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                  className="w-full pl-10 pr-3 py-2 border border-[#DFE1E6] rounded-sm
-                    focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
-                  placeholder="Enter your full name"
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
               <label className="block text-sm font-medium text-[#172B4D]">
                 Email Address
@@ -80,15 +61,17 @@ const SignUp: React.FC = () => {
                   }
                   className="w-full pl-10 pr-3 py-2 border border-[#DFE1E6] rounded-sm
                     focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
-                  placeholder="Enter your email address"
+                  placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#172B4D]">
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-[#172B4D]">
+                  Password
+                </label>
+              </div>
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A869A]" />
                 <input
@@ -100,10 +83,25 @@ const SignUp: React.FC = () => {
                   }
                   className="w-full pl-10 pr-3 py-2 border border-[#DFE1E6] rounded-sm
                     focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
-                  placeholder="Create a secure password"
-                  minLength={8}
+                  placeholder="Enter your password"
                 />
               </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-2 mb-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  className="form-checkbox text-[#0052CC]"
+                />
+                <span className="text-sm text-[#42526E]">Remember me</span>
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-[#0052CC] hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
 
             <button
@@ -117,7 +115,7 @@ const SignUp: React.FC = () => {
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Sign up</span>
+                  <span>Log in</span>
                   <FiArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -131,15 +129,15 @@ const SignUp: React.FC = () => {
               </div>
               <div className="relative flex justify-center">
                 <span className="px-4 text-sm text-[#7A869A] bg-white">
-                  Already have an account?
+                  Don't have an account?
                 </span>
               </div>
             </div>
             <Link
-              to="/login"
+              to="/signup"
               className="inline-block w-full py-2 text-center border border-[#0052CC] text-[#0052CC] hover:bg-[#DEEBFF] transition-colors rounded-sm"
             >
-              Sign in
+              Create an account
             </Link>
           </div>
         </div>
@@ -148,4 +146,4 @@ const SignUp: React.FC = () => {
   );
 };
 
-export default SignUp;
+export default Login;
