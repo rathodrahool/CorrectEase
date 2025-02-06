@@ -3,22 +3,28 @@ import Navigation, { ActiveTab } from "../navigation/Navigation";
 import Editor from "../editor/Editor";
 import CorrectionHistory from "../history/CorrectionHistory";
 import Settings from "../settings/Settings";
+import Profile from "../profile/Profile";
 import { FiSettings, FiUser } from "react-icons/fi";
 
 const Layout: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("editor");
   const [activeUserId, setActiveUserId] = React.useState<string>("");
   const [showSettings, setShowSettings] = React.useState(false);
+  const [showProfile, setShowProfile] = React.useState(false);
 
   const handleUserSelect = (userId: string) => {
     setActiveUserId(userId);
     setActiveTab("history");
     setShowSettings(false);
+    setShowProfile(false);
   };
 
   const renderMainContent = () => {
     if (showSettings) {
       return <Settings />;
+    }
+    if (showProfile) {
+      return <Profile />;
     }
     return activeTab === "editor" ? (
       <Editor activeUserId={activeUserId} />
@@ -34,6 +40,7 @@ const Layout: React.FC = () => {
         onTabChange={(tab) => {
           setActiveTab(tab);
           setShowSettings(false);
+          setShowProfile(false);
         }}
         activeUserId={activeUserId}
         onUserSelect={handleUserSelect}
@@ -43,13 +50,18 @@ const Layout: React.FC = () => {
           <h1 className="text-lg font-medium text-[#172B4D]">
             {showSettings
               ? "Settings"
+              : showProfile
+              ? "Profile"
               : activeTab === "editor"
               ? "CorrectEase Editor"
               : `CorrectEase History ${activeUserId ? "- Corrections" : ""}`}
           </h1>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={() => {
+                setShowSettings(!showSettings);
+                setShowProfile(false);
+              }}
               className={`p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative
                 ${showSettings ? "bg-[#DEEBFF] text-[#0052CC]" : ""}`}
               aria-label="Settings"
@@ -64,7 +76,12 @@ const Layout: React.FC = () => {
               </span>
             </button>
             <button
-              className="p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative"
+              onClick={() => {
+                setShowProfile(!showProfile);
+                setShowSettings(false);
+              }}
+              className={`p-2 text-[#42526E] hover:bg-[#F4F5F7] rounded-sm transition-colors group relative
+                ${showProfile ? "bg-[#DEEBFF] text-[#0052CC]" : ""}`}
               aria-label="Profile"
             >
               <FiUser className="w-5 h-5" />
