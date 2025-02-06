@@ -1,5 +1,10 @@
 import React from "react";
-import { FiSearch, FiPlus, FiMessageSquare } from "react-icons/fi";
+import {
+  FiSearch,
+  FiPlus,
+  FiMessageSquare,
+  FiCheckCircle,
+} from "react-icons/fi";
 
 interface ChatUser {
   id: string;
@@ -8,6 +13,15 @@ interface ChatUser {
   online: boolean;
   lastMessage?: string;
   timestamp?: string;
+  savedTexts?: SavedText[];
+}
+
+interface SavedText {
+  id: string;
+  originalText: string;
+  enhancedText: string;
+  style: string;
+  timestamp: string;
 }
 
 const mockChats: ChatUser[] = [
@@ -15,8 +29,17 @@ const mockChats: ChatUser[] = [
     id: "1",
     name: "Yagnik Gohil",
     online: true,
-    lastMessage: "Thanks for the help with...",
+    lastMessage: "Last enhanced: 'Thanks for the help...'",
     timestamp: "2m",
+    savedTexts: [
+      {
+        id: "t1",
+        originalText: "thanks for the help with...",
+        enhancedText: "Thank you for your assistance with...",
+        style: "formal",
+        timestamp: new Date().toISOString(),
+      },
+    ],
   },
   {
     id: "2",
@@ -89,7 +112,10 @@ const Navigation: React.FC = () => {
                     )}
                   </div>
                   {chat.lastMessage && (
-                    <p className="text-xs text-[#7A869A] truncate">
+                    <p className="text-xs text-[#7A869A] truncate flex items-center gap-1">
+                      {chat.savedTexts && chat.savedTexts.length > 0 && (
+                        <FiCheckCircle className="w-3 h-3 text-[#0052CC]" />
+                      )}
                       {chat.lastMessage}
                     </p>
                   )}

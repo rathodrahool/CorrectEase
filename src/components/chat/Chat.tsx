@@ -64,7 +64,7 @@ const Chat: React.FC = () => {
                 msg.sender === "user"
                   ? "bg-[#0052CC] text-white"
                   : msg.isCorrection
-                  ? "bg-[#2684FF] text-white"
+                  ? "bg-[#00875A] text-white"
                   : "bg-[#F4F5F7] text-[#172B4D]"
               } rounded-sm px-4 py-2 shadow-sm`}
             >
