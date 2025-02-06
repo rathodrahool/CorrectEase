@@ -357,10 +357,15 @@ const Editor: React.FC = () => {
               ) : (
                 <div className="h-full flex items-center justify-center text-[#7A869A] text-sm">
                   {isEnhancing ? (
-                    <p className="flex items-center gap-2">
-                      <span className="animate-spin">⏳</span> Generating
-                      enhancements...
-                    </p>
+                    <div className="flex flex-col items-center gap-3">
+                      <div
+                        className="w-5 h-5 border-2 border-[#0052CC] border-t-transparent 
+                        animate-spin"
+                      ></div>
+                      <p className="text-[#42526E]">
+                        Generating enhancements...
+                      </p>
+                    </div>
                   ) : (
                     <p>
                       Click the "Enhance" button to get multiple versions of
