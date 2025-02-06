@@ -6,6 +6,8 @@ import {
   FiSliders,
   FiUser,
   FiChevronDown,
+  FiSend,
+  FiBookOpen,
 } from "react-icons/fi";
 
 interface CorrectionStyle {
@@ -21,6 +23,12 @@ interface SavedText {
   enhancedText: string;
   style: string;
   timestamp: string;
+}
+
+interface EnhancedVersion {
+  id: string;
+  text: string;
+  style: string;
 }
 
 const correctionStyles: CorrectionStyle[] = [
@@ -45,6 +53,13 @@ const Editor: React.FC = () => {
   const [enhancedText, setEnhancedText] = React.useState("");
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [charCount, setCharCount] = React.useState(0);
+  const [wordCount, setWordCount] = React.useState(0);
+  const [isCopied, setIsCopied] = React.useState(false);
+  const [enhancedVersions, setEnhancedVersions] = React.useState<
+    EnhancedVersion[]
+  >([]);
+  const [isEnhancing, setIsEnhancing] = React.useState(false);
 
   // Mock users - this would come from your chat list
   const mockUsers = [
@@ -67,8 +82,14 @@ const Editor: React.FC = () => {
 
   const selectedUserData = mockUsers.find((user) => user.id === selectedUser);
 
+  const updateCounts = (text: string) => {
+    setCharCount(text.length);
+    setWordCount(text.trim() === "" ? 0 : text.trim().split(/\s+/).length);
+  };
+
   const handleTextChange = (text: string) => {
     setOriginalText(text);
+    updateCounts(text);
     // Auto-save logic would go here
     if (selectedUser) {
       saveText(text);
@@ -88,9 +109,47 @@ const Editor: React.FC = () => {
     // Save logic here
   };
 
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(enhancedText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleEnhance = () => {
+    setIsEnhancing(true);
+    // Simulating API call delay
+    setTimeout(() => {
+      const demoEnhancements: EnhancedVersion[] = [
+        {
+          id: "1",
+          text: `${originalText} (Formal Version: This is a more sophisticated enhancement of your text.)`,
+          style: "formal",
+        },
+        {
+          id: "2",
+          text: `${originalText} (Casual Version: Here's a friendly way to say it!)`,
+          style: "casual",
+        },
+        {
+          id: "3",
+          text: `${originalText} (Concise Version: Shortened for clarity.)`,
+          style: "concise",
+        },
+      ];
+      setEnhancedVersions(demoEnhancements);
+      setIsEnhancing(false);
+    }, 1500);
+  };
+
+  const insertDemoText = () => {
+    const demoText =
+      "This is a sample text that needs to be enhanced. Please help me make it better.";
+    handleTextChange(demoText);
+  };
+
   return (
     <div className="h-full max-w-5xl mx-auto p-6">
-      <div className="bg-white border border-[#DFE1E6] rounded-sm shadow-sm">
+      <div className="bg-white border border-[#DFE1E6] shadow-sm">
         {/* User Selection Header */}
         <div className="px-6 py-3 border-b border-[#DFE1E6] flex items-center gap-4">
           <div className="flex items-center gap-2 text-[#42526E]">
@@ -101,7 +160,7 @@ const Editor: React.FC = () => {
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 px-3 py-1.5 text-sm border border-[#DFE1E6] 
-                rounded-sm text-[#172B4D] hover:bg-[#F4F5F7] transition-colors
+                text-[#172B4D] hover:bg-[#F4F5F7] transition-colors
                 focus:border-[#2684FF] focus:outline-none focus:ring-2 
                 focus:ring-[#2684FF] focus:ring-opacity-25 min-w-[200px]
                 justify-between"
@@ -110,7 +169,7 @@ const Editor: React.FC = () => {
                 {selectedUser ? (
                   <>
                     <div
-                      className="w-6 h-6 bg-[#DFE1E6] rounded-sm flex items-center 
+                      className="w-6 h-6 bg-[#DFE1E6] flex items-center 
                       justify-center text-[#42526E] text-xs font-medium"
                     >
                       {selectedUserData?.name.charAt(0)}
@@ -130,7 +189,7 @@ const Editor: React.FC = () => {
             {isDropdownOpen && (
               <div
                 className="absolute top-full left-0 mt-1 w-full bg-white border 
-                border-[#DFE1E6] rounded-sm shadow-lg z-40 py-1"
+                border-[#DFE1E6] shadow-lg z-40 py-1"
               >
                 {mockUsers.map((user) => (
                   <button
@@ -148,7 +207,7 @@ const Editor: React.FC = () => {
                       }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-sm flex items-center justify-center 
+                      className={`w-6 h-6 flex items-center justify-center 
                       text-xs font-medium
                       ${
                         selectedUser === user.id
@@ -173,7 +232,7 @@ const Editor: React.FC = () => {
               <button
                 key={style.id}
                 onClick={() => setSelectedStyle(style.id)}
-                className={`px-3 py-1.5 rounded-sm text-sm font-medium transition-colors
+                className={`px-3 py-1.5 text-sm font-medium transition-colors
                   ${
                     selectedStyle === style.id
                       ? "bg-[#DEEBFF] text-[#0052CC]"
@@ -184,7 +243,7 @@ const Editor: React.FC = () => {
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-2 text-[#42526E] hover:bg-[#F4F5F7] px-3 py-1.5 rounded-sm transition-colors">
+          <button className="flex items-center gap-2 text-[#42526E] hover:bg-[#F4F5F7] px-3 py-1.5 transition-colors">
             <FiSliders className="w-4 h-4" />
             <span className="text-sm font-medium">Customize</span>
           </button>
@@ -193,50 +252,123 @@ const Editor: React.FC = () => {
         {/* Content Area */}
         <div className="grid grid-cols-2 divide-x divide-[#DFE1E6]">
           {/* Original Text */}
-          <div className="p-6">
+          <div className="p-6 flex flex-col h-[calc(100vh-15rem)]">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-[#42526E]">
-                Original Text
-              </h3>
-              <button className="text-[#42526E] hover:bg-[#F4F5F7] p-1.5 rounded-sm transition-colors">
-                <FiRotateCcw className="w-4 h-4" />
-              </button>
-            </div>
-            <textarea
-              value={originalText}
-              onChange={(e) => handleTextChange(e.target.value)}
-              placeholder={
-                selectedUser
-                  ? "Paste your chat message here..."
-                  : "Please select a user first..."
-              }
-              disabled={!selectedUser}
-              className="w-full min-h-[calc(100vh-20rem)] resize-none text-[#172B4D] text-sm 
-                placeholder-[#7A869A] focus:outline-none focus:border-[#2684FF]
-                disabled:bg-[#F4F5F7] disabled:cursor-not-allowed"
-            />
-          </div>
-
-          {/* Corrected Text */}
-          <div className="p-6">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-[#42526E]">
-                Enhanced Version
-              </h3>
-              <button className="text-[#42526E] hover:bg-[#F4F5F7] p-1.5 rounded-sm transition-colors">
-                <FiCopy className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="prose prose-sm max-w-none text-[#172B4D]">
-              <p>{enhancedText || "Your enhanced text will appear here..."}</p>
-              <div className="mt-4 flex items-center gap-2 text-[#0052CC] bg-[#DEEBFF] px-3 py-2 rounded-sm">
-                <FiCheckCircle className="w-4 h-4" />
-                <span className="text-sm">
-                  {selectedUser
-                    ? "Changes will be saved automatically"
-                    : "Select a user to start"}
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium text-[#42526E]">
+                  Original Text
+                </h3>
+                <span className="text-xs text-[#7A869A]">
+                  {charCount} chars | {wordCount} words
                 </span>
               </div>
+              <button
+                onClick={() => handleTextChange("")}
+                className="text-[#42526E] hover:bg-[#F4F5F7] p-1.5 transition-colors group relative"
+                title="Clear text"
+              >
+                <FiRotateCcw className="w-4 h-4" />
+                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#172B4D] text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  Clear text
+                </span>
+              </button>
+            </div>
+            <div className="relative flex-grow">
+              <textarea
+                value={originalText}
+                onChange={(e) => handleTextChange(e.target.value)}
+                placeholder={
+                  selectedUser
+                    ? "Paste your chat message here..."
+                    : "Please select a user first..."
+                }
+                disabled={!selectedUser}
+                className="w-full h-full resize-none text-[#172B4D] text-sm p-4
+                  placeholder-[#7A869A] focus:outline-none border border-[#DFE1E6] 
+                  focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] 
+                  focus:ring-opacity-25 disabled:bg-[#F4F5F7] disabled:cursor-not-allowed
+                  transition-all duration-200"
+              />
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <button
+                  onClick={insertDemoText}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#F4F5F7] text-[#42526E] 
+                    hover:bg-[#DEEBFF] transition-colors"
+                >
+                  <FiBookOpen className="w-4 h-4" />
+                  <span className="text-sm">Try Demo</span>
+                </button>
+                {originalText.length > 0 && (
+                  <button
+                    onClick={handleEnhance}
+                    disabled={isEnhancing}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[#0052CC] text-white
+                      hover:bg-[#0065FF] transition-colors disabled:opacity-50"
+                  >
+                    <FiSend className="w-4 h-4" />
+                    <span className="text-sm">
+                      {isEnhancing ? "Enhancing..." : "Enhance"}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Version */}
+          <div className="p-6 flex flex-col h-[calc(100vh-15rem)]">
+            <h3 className="text-sm font-medium text-[#42526E] mb-3">
+              Enhanced Versions
+            </h3>
+            <div className="flex-grow border border-[#DFE1E6] p-4 overflow-y-auto">
+              {enhancedVersions.length > 0 ? (
+                <div className="space-y-4">
+                  {enhancedVersions.map((version) => (
+                    <div
+                      key={version.id}
+                      className="border border-[#DFE1E6] p-4 group relative"
+                    >
+                      <div className="flex justify-between items-start gap-4 mb-2">
+                        <span className="text-xs font-medium text-[#0052CC] bg-[#DEEBFF] px-2 py-1">
+                          {version.style.charAt(0).toUpperCase() +
+                            version.style.slice(1)}
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(version.text);
+                            setIsCopied(true);
+                            setTimeout(() => setIsCopied(false), 2000);
+                          }}
+                          className="text-[#42526E] hover:bg-[#F4F5F7] p-1.5 transition-colors"
+                        >
+                          {isCopied ? (
+                            <FiCheckCircle className="w-4 h-4 text-[#0052CC]" />
+                          ) : (
+                            <FiCopy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-[#172B4D] text-sm whitespace-pre-wrap">
+                        {version.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-[#7A869A] text-sm">
+                  {isEnhancing ? (
+                    <p className="flex items-center gap-2">
+                      <span className="animate-spin">⏳</span> Generating
+                      enhancements...
+                    </p>
+                  ) : (
+                    <p>
+                      Click the "Enhance" button to get multiple versions of
+                      your text
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
