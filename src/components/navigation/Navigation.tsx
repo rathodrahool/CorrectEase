@@ -4,8 +4,16 @@ import {
   FiPlus,
   FiMessageSquare,
   FiCheckCircle,
+  FiEdit3,
 } from "react-icons/fi";
 import CreateChatModal from "../modals/CreateChatModal";
+
+export type ActiveTab = "editor" | "chat";
+
+interface NavigationProps {
+  activeTab: ActiveTab;
+  onTabChange: (tab: ActiveTab) => void;
+}
 
 interface ChatUser {
   id: string;
@@ -53,7 +61,7 @@ const mockChats: ChatUser[] = [
   // Add more mock data as needed
 ];
 
-const Navigation: React.FC = () => {
+const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const [activeChat, setActiveChat] = React.useState<string>("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [chats, setChats] = React.useState<ChatUser[]>(mockChats);
@@ -73,6 +81,32 @@ const Navigation: React.FC = () => {
   return (
     <nav className="w-64 h-screen bg-[#FAFBFC] border-r border-[#DFE1E6] flex flex-col sticky top-0 z-30">
       <div className="p-4 border-b border-[#DFE1E6]">
+        <div className="flex items-center space-x-2 mb-4">
+          <button
+            onClick={() => onTabChange("editor")}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-colors
+              ${
+                activeTab === "editor"
+                  ? "bg-[#DEEBFF] text-[#0052CC]"
+                  : "text-[#42526E] hover:bg-[#F4F5F7]"
+              }`}
+          >
+            <FiEdit3 className="w-4 h-4" />
+            <span>Editor</span>
+          </button>
+          <button
+            onClick={() => onTabChange("chat")}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-colors
+              ${
+                activeTab === "chat"
+                  ? "bg-[#DEEBFF] text-[#0052CC]"
+                  : "text-[#42526E] hover:bg-[#F4F5F7]"
+              }`}
+          >
+            <FiMessageSquare className="w-4 h-4" />
+            <span>Chats</span>
+          </button>
+        </div>
         <div className="flex items-center bg-white rounded-sm border border-[#DFE1E6] hover:border-[#2684FF] focus-within:border-[#2684FF] focus-within:shadow-[0_0_0_2px_rgba(38,132,255,0.2)]">
           <FiSearch className="text-[#42526E] w-4 h-4 ml-2" />
           <input
