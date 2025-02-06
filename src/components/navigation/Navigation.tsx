@@ -5,6 +5,7 @@ import {
   FiMessageSquare,
   FiCheckCircle,
 } from "react-icons/fi";
+import CreateChatModal from "../modals/CreateChatModal";
 
 interface ChatUser {
   id: string;
@@ -14,6 +15,7 @@ interface ChatUser {
   lastMessage?: string;
   timestamp?: string;
   savedTexts?: SavedText[];
+  jobProfile?: string;
 }
 
 interface SavedText {
@@ -53,9 +55,23 @@ const mockChats: ChatUser[] = [
 
 const Navigation: React.FC = () => {
   const [activeChat, setActiveChat] = React.useState<string>("");
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [chats, setChats] = React.useState<ChatUser[]>(mockChats);
+
+  const handleCreateChat = (data: { name: string; jobProfile: string }) => {
+    const newChat: ChatUser = {
+      id: Date.now().toString(),
+      name: data.name,
+      jobProfile: data.jobProfile,
+      online: true,
+      timestamp: "now",
+    };
+
+    setChats((prev) => [newChat, ...prev]);
+  };
 
   return (
-    <nav className="w-64 h-screen bg-[#FAFBFC] border-r border-[#DFE1E6] flex flex-col sticky top-0">
+    <nav className="w-64 h-screen bg-[#FAFBFC] border-r border-[#DFE1E6] flex flex-col sticky top-0 z-30">
       <div className="p-4 border-b border-[#DFE1E6]">
         <div className="flex items-center bg-white rounded-sm border border-[#DFE1E6] hover:border-[#2684FF] focus-within:border-[#2684FF] focus-within:shadow-[0_0_0_2px_rgba(38,132,255,0.2)]">
           <FiSearch className="text-[#42526E] w-4 h-4 ml-2" />
@@ -68,7 +84,11 @@ const Navigation: React.FC = () => {
       </div>
 
       <div className="p-4">
-        <button className="w-full py-2 px-3 bg-[#0052CC] text-white rounded-sm text-sm font-medium flex items-center gap-2 hover:bg-[#0065FF] transition-colors">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="w-full py-2 px-3 bg-[#0052CC] text-white rounded-sm text-sm 
+            font-medium flex items-center gap-2 hover:bg-[#0065FF] transition-colors"
+        >
           <FiPlus className="w-4 h-4" />
           <span>Create Chat</span>
         </button>
@@ -81,7 +101,7 @@ const Navigation: React.FC = () => {
             <span>Recent Chats</span>
           </h3>
           <ul className="space-y-1">
-            {mockChats.map((chat) => (
+            {chats.map((chat) => (
               <li
                 key={chat.id}
                 onClick={() => setActiveChat(chat.id)}
@@ -111,6 +131,9 @@ const Navigation: React.FC = () => {
                       </span>
                     )}
                   </div>
+                  <p className="text-xs text-[#7A869A] truncate">
+                    {chat.jobProfile}
+                  </p>
                   {chat.lastMessage && (
                     <p className="text-xs text-[#7A869A] truncate flex items-center gap-1">
                       {chat.savedTexts && chat.savedTexts.length > 0 && (
@@ -125,6 +148,12 @@ const Navigation: React.FC = () => {
           </ul>
         </div>
       </div>
+
+      <CreateChatModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateChat}
+      />
     </nav>
   );
 };

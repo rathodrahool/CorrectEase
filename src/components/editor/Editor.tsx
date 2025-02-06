@@ -130,7 +130,7 @@ const Editor: React.FC = () => {
             {isDropdownOpen && (
               <div
                 className="absolute top-full left-0 mt-1 w-full bg-white border 
-                border-[#DFE1E6] rounded-sm shadow-lg z-10 py-1"
+                border-[#DFE1E6] rounded-sm shadow-lg z-40 py-1"
               >
                 {mockUsers.map((user) => (
                   <button
