@@ -86,7 +86,16 @@ const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <nav className="w-64 h-screen bg-[#FAFBFC] border-r border-[#DFE1E6] flex flex-col sticky top-0 z-30">
+      {/* Add logo and brand name */}
       <div className="p-4 border-b border-[#DFE1E6]">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 bg-[#0052CC] rounded-sm flex items-center justify-center text-white font-bold text-lg">
+            CE
+          </div>
+          <span className="text-lg font-semibold text-[#172B4D]">
+            CorrectEase
+          </span>
+        </div>
         <div className="flex items-center space-x-2 mb-4">
           <button
             onClick={() => onTabChange("editor")}
