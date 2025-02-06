@@ -74,7 +74,7 @@ const Navigation: React.FC = () => {
                     {chat.avatar || chat.name.charAt(0)}
                   </div>
                   {chat.online && (
-                    <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#36B37E] rounded-full border-2 border-white" />
+                    <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#2684FF] rounded-full border-2 border-white" />
                   )}
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
