@@ -3,35 +3,25 @@ import React from "react";
 const Editor: React.FC = () => {
   return (
     <div className="h-full w-full max-w-[50rem] mx-auto">
-      <div
-        className="bg-white min-h-[calc(100vh-8rem)] relative"
-        style={{
-          boxShadow:
-            "0 0 32px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.05)",
-          border: "1px solid rgba(0, 0, 0, 0.08)",
-        }}
-      >
-        <div className="px-16 py-12">
-          <div className="mb-8 flex items-center justify-between border-b border-gray-100 pb-4">
+      <div className="m-6 bg-white border border-[#DFE1E6] rounded-sm shadow-sm">
+        <div className="px-8 py-6">
+          <div className="mb-6 border-b border-[#DFE1E6] pb-3">
             <input
               type="text"
-              placeholder="Untitled Document"
-              className="text-3xl font-semibold focus:outline-none text-gray-800 w-full placeholder-gray-300"
+              placeholder="Untitled"
+              className="text-2xl font-medium text-[#172B4D] w-full focus:outline-none focus:border-[#2684FF] 
+                placeholder-[#7A869A] hover:bg-[#FAFBFC] rounded-sm px-2 py-1"
             />
           </div>
-          <div className="prose prose-lg max-w-none">
+          <div className="prose max-w-none">
             <textarea
-              className="w-full min-h-[calc(100vh-16rem)] resize-none border-0 focus:outline-none text-gray-700 text-lg placeholder-gray-300"
-              placeholder="Start writing..."
-              style={{
-                lineHeight: "1.8",
-                padding: "0",
-              }}
+              className="w-full min-h-[calc(100vh-16rem)] resize-none text-[#172B4D] text-base 
+                placeholder-[#7A869A] focus:outline-none focus:border-[#2684FF] 
+                hover:bg-[#FAFBFC] rounded-sm p-2"
+              placeholder="Add your description..."
+              style={{ lineHeight: "1.5" }}
             />
           </div>
-        </div>
-        <div className="absolute bottom-4 right-6 text-xs text-gray-400 select-none">
-          Document
         </div>
       </div>
     </div>

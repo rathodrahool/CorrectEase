@@ -3,39 +3,41 @@ import { FiSearch, FiPlus, FiClock, FiLock } from "react-icons/fi";
 
 const Navigation: React.FC = () => {
   return (
-    <nav className="w-72 h-screen bg-white border-r border-gray-200 p-6 flex flex-col sticky top-0">
-      <div className="flex items-center bg-gray-50 rounded-lg px-4 py-2.5 mb-6">
-        <FiSearch className="text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Search..."
-          className="ml-3 w-full bg-transparent focus:outline-none text-sm text-gray-600 placeholder-gray-400"
-        />
+    <nav className="w-64 h-screen bg-[#FAFBFC] border-r border-[#DFE1E6] flex flex-col sticky top-0">
+      <div className="p-4 border-b border-[#DFE1E6]">
+        <div className="flex items-center bg-white rounded-sm border border-[#DFE1E6] hover:border-[#2684FF] focus-within:border-[#2684FF] focus-within:shadow-[0_0_0_2px_rgba(38,132,255,0.2)]">
+          <FiSearch className="text-[#42526E] w-4 h-4 ml-2" />
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-full py-2 px-2 text-sm text-[#172B4D] placeholder-[#7A869A] bg-transparent focus:outline-none"
+          />
+        </div>
       </div>
 
-      <button className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors mb-8 shadow-sm">
-        <FiPlus className="w-5 h-5" />
-        <span className="font-medium">New Doc</span>
-      </button>
-
-      <div className="mb-8">
-        <h3 className="flex items-center gap-2.5 text-sm font-semibold text-gray-700 mb-3 px-2">
-          <FiClock className="w-4 h-4" />
-          <span>Recent</span>
-        </h3>
-        <ul className="space-y-1">
-          {/* Recent items will be populated here */}
-        </ul>
+      <div className="p-4">
+        <button className="w-full py-2 px-3 bg-[#0052CC] text-white rounded-sm text-sm font-medium flex items-center gap-2 hover:bg-[#0065FF] transition-colors">
+          <FiPlus className="w-4 h-4" />
+          <span>Create People</span>
+        </button>
       </div>
 
-      <div className="mb-8">
-        <h3 className="flex items-center gap-2.5 text-sm font-semibold text-gray-700 mb-3 px-2">
-          <FiLock className="w-4 h-4" />
-          <span>Private Writing</span>
-        </h3>
-        <ul className="space-y-1">
-          {/* Private documents will be populated here */}
-        </ul>
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 py-2">
+          <h3 className="flex items-center text-xs font-medium text-[#42526E] mb-2 uppercase tracking-wide">
+            <FiClock className="w-4 h-4 mr-2" />
+            <span>Recent</span>
+          </h3>
+          <ul className="space-y-0.5">{/* Recent items */}</ul>
+        </div>
+
+        <div className="px-4 py-2 mt-4">
+          <h3 className="flex items-center text-xs font-medium text-[#42526E] mb-2 uppercase tracking-wide">
+            <FiLock className="w-4 h-4 mr-2" />
+            <span>Private</span>
+          </h3>
+          <ul className="space-y-0.5">{/* Private items */}</ul>
+        </div>
       </div>
     </nav>
   );
