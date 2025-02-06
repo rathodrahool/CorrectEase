@@ -13,6 +13,8 @@ export type ActiveTab = "editor" | "chat";
 interface NavigationProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
+  activeChat: string;
+  onChatSelect: (chatId: string) => void;
 }
 
 interface ChatUser {
@@ -61,8 +63,12 @@ const mockChats: ChatUser[] = [
   // Add more mock data as needed
 ];
 
-const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
-  const [activeChat, setActiveChat] = React.useState<string>("");
+const Navigation: React.FC<NavigationProps> = ({
+  activeTab,
+  onTabChange,
+  activeChat,
+  onChatSelect,
+}) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [chats, setChats] = React.useState<ChatUser[]>(mockChats);
 
@@ -138,7 +144,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
             {chats.map((chat) => (
               <li
                 key={chat.id}
-                onClick={() => setActiveChat(chat.id)}
+                onClick={() => onChatSelect(chat.id)}
                 className={`flex items-center p-2 rounded-sm cursor-pointer transition-colors
                   ${
                     activeChat === chat.id

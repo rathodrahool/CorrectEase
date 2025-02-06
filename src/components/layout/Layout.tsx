@@ -9,10 +9,21 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = () => {
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("editor");
+  const [activeChat, setActiveChat] = React.useState<string>("");
+
+  const handleChatSelect = (chatId: string) => {
+    setActiveChat(chatId);
+    setActiveTab("chat");
+  };
 
   return (
     <div className="flex min-h-screen bg-[#FAFBFC] relative">
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navigation
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        activeChat={activeChat}
+        onChatSelect={handleChatSelect}
+      />
       <div className="flex-1 flex flex-col">
         <header className="h-14 border-b border-[#DFE1E6] px-6 flex items-center bg-white sticky top-0 z-20">
           <h1 className="text-lg font-medium text-[#172B4D]">
@@ -20,7 +31,11 @@ const Layout: React.FC<LayoutProps> = () => {
           </h1>
         </header>
         <main className="flex-1 overflow-auto relative z-10">
-          {activeTab === "editor" ? <Editor /> : <Chat />}
+          {activeTab === "editor" ? (
+            <Editor />
+          ) : (
+            <Chat activeChatId={activeChat} />
+          )}
         </main>
       </div>
     </div>

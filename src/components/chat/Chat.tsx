@@ -1,6 +1,16 @@
 import React from "react";
 import { FiSend, FiCheck, FiEdit2 } from "react-icons/fi";
 
+interface ChatUser {
+  id: string;
+  name: string;
+  avatar?: string;
+  online: boolean;
+  lastMessage?: string;
+  timestamp?: string;
+  jobProfile?: string;
+}
+
 interface Message {
   id: string;
   text: string;
@@ -9,7 +19,11 @@ interface Message {
   isCorrection?: boolean;
 }
 
-const Chat: React.FC = () => {
+interface ChatProps {
+  activeChatId: string;
+}
+
+const Chat: React.FC<ChatProps> = ({ activeChatId }) => {
   const [message, setMessage] = React.useState("");
   const messagesEndRef = React.useState<HTMLDivElement | null>(null);
 
@@ -35,18 +49,51 @@ const Chat: React.FC = () => {
     },
   ];
 
+  // Add mock users data (should ideally come from a shared data source or context)
+  const mockChats: ChatUser[] = [
+    {
+      id: "1",
+      name: "Yagnik Gohil",
+      online: true,
+      lastMessage: "Last enhanced: 'Thanks for the help...'",
+      timestamp: "2m",
+      jobProfile: "Software Engineer",
+    },
+    {
+      id: "2",
+      name: "Tushar Panchal",
+      online: false,
+      lastMessage: "Could you check this...",
+      timestamp: "1h",
+      jobProfile: "Product Manager",
+    },
+  ];
+
+  // Find the active chat user
+  const activeUser = mockChats.find((chat) => chat.id === activeChatId);
+
   return (
     <div className="flex flex-col h-full">
       {/* Chat Header */}
       <div className="px-6 py-3 border-b border-[#DFE1E6] bg-white flex items-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium">
-            Y
-          </div>
-          <div>
-            <h2 className="text-[#172B4D] font-medium">Yagnik Gohil</h2>
-            <span className="text-xs text-[#7A869A]">Online</span>
-          </div>
+          {activeUser ? (
+            <>
+              <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium">
+                {activeUser.name.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-[#172B4D] font-medium">
+                  {activeUser.name}
+                </h2>
+                <span className="text-xs text-[#7A869A]">
+                  {activeUser.online ? "Online" : "Offline"}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div>Select a chat to start messaging</div>
+          )}
         </div>
       </div>
 
