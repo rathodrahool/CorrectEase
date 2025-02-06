@@ -9,6 +9,7 @@ import {
   FiSend,
   FiBookOpen,
 } from "react-icons/fi";
+import CustomizeModal, { CustomizeSettings } from "./CustomizeModal";
 
 interface CorrectionStyle {
   id: string;
@@ -60,6 +61,15 @@ const Editor: React.FC = () => {
     EnhancedVersion[]
   >([]);
   const [isEnhancing, setIsEnhancing] = React.useState(false);
+  const [isCustomizeOpen, setIsCustomizeOpen] = React.useState(false);
+  const [customSettings, setCustomSettings] = React.useState<CustomizeSettings>(
+    {
+      tone: 50,
+      formality: 50,
+      length: 50,
+      creativity: 50,
+    }
+  );
 
   // Mock users - this would come from your chat list
   const mockUsers = [
@@ -117,12 +127,12 @@ const Editor: React.FC = () => {
 
   const handleEnhance = () => {
     setIsEnhancing(true);
-    // Simulating API call delay
+    // Simulating API call delay with custom settings
     setTimeout(() => {
       const demoEnhancements: EnhancedVersion[] = [
         {
           id: "1",
-          text: `${originalText} (Formal Version: This is a more sophisticated enhancement of your text.)`,
+          text: `${originalText} (Enhanced with tone: ${customSettings.tone}%, formality: ${customSettings.formality}%)`,
           style: "formal",
         },
         {
@@ -145,6 +155,16 @@ const Editor: React.FC = () => {
     const demoText =
       "This is a sample text that needs to be enhanced. Please help me make it better.";
     handleTextChange(demoText);
+  };
+
+  const handleCustomizeClose = () => {
+    setIsCustomizeOpen(false);
+  };
+
+  const handleCustomizeSave = (settings: CustomizeSettings) => {
+    setCustomSettings(settings);
+    setIsCustomizeOpen(false);
+    // You can use these settings in your handleEnhance function
   };
 
   return (
@@ -243,7 +263,10 @@ const Editor: React.FC = () => {
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-2 text-[#42526E] hover:bg-[#F4F5F7] px-3 py-1.5 transition-colors">
+          <button
+            onClick={() => setIsCustomizeOpen(true)}
+            className="flex items-center gap-2 text-[#42526E] hover:bg-[#F4F5F7] px-3 py-1.5 transition-colors"
+          >
             <FiSliders className="w-4 h-4" />
             <span className="text-sm font-medium">Customize</span>
           </button>
@@ -378,6 +401,11 @@ const Editor: React.FC = () => {
           </div>
         </div>
       </div>
+      <CustomizeModal
+        isOpen={isCustomizeOpen}
+        onClose={handleCustomizeClose}
+        onSave={handleCustomizeSave}
+      />
     </div>
   );
 };
