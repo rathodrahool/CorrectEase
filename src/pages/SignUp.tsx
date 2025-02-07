@@ -15,12 +15,22 @@ const SignUp: React.FC = () => {
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "", // Add this field
   });
   const [isLoading, setIsLoading] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState({
+    password: false,
+    confirmPassword: false,
+  });
+  const [error, setError] = React.useState(""); // Add error state
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+    setError("");
     setIsLoading(true);
     try {
       console.log("Signing up with:", formData);
@@ -100,7 +110,7 @@ const SignUp: React.FC = () => {
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A869A]" />
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword.password ? "text" : "password"}
                   required
                   value={formData.password}
                   onChange={(e) =>
@@ -113,10 +123,15 @@ const SignUp: React.FC = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() =>
+                    setShowPassword({
+                      ...showPassword,
+                      password: !showPassword.password,
+                    })
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A869A] hover:text-[#42526E] transition-colors"
                 >
-                  {showPassword ? (
+                  {showPassword.password ? (
                     <FiEyeOff className="w-4 h-4" />
                   ) : (
                     <FiEye className="w-4 h-4" />
@@ -124,6 +139,52 @@ const SignUp: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#172B4D]">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A869A]" />
+                <input
+                  type={showPassword.confirmPassword ? "text" : "password"}
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  className="w-full pl-10 pr-12 py-2 border border-[#DFE1E6] rounded-sm
+                    focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
+                  placeholder="Confirm your password"
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword({
+                      ...showPassword,
+                      confirmPassword: !showPassword.confirmPassword,
+                    })
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A869A] hover:text-[#42526E] transition-colors"
+                >
+                  {showPassword.confirmPassword ? (
+                    <FiEyeOff className="w-4 h-4" />
+                  ) : (
+                    <FiEye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-sm text-[#DE350B] bg-[#FFEBE6] p-2 rounded">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
