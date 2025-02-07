@@ -8,6 +8,7 @@ import {
   FiEyeOff,
 } from "react-icons/fi";
 import { useNavigate, Link } from "react-router-dom";
+import { authService } from "../services/auth.service";
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -32,15 +33,59 @@ const SignUp: React.FC = () => {
     }
     setError("");
     setIsLoading(true);
+
     try {
-      console.log("Signing up with:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate("/verify-otp"); // Redirect to OTP verification page
-    } catch (error) {
+      const signupData = {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      };
+
+      const response = await authService.signup(signupData);
+
+      if (response) {
+        localStorage.setItem("verificationEmail", formData.email);
+        navigate("/verify-otp");
+      }
+    } catch (error: any) {
       console.error("Signup failed:", error);
+      setError(
+        error.response?.data?.message ||
+          "Failed to create account. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add validation for input fields
+  const validateForm = () => {
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return false;
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError("Password must contain at least one uppercase letter");
+      return false;
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      setError("Password must contain at least one number");
+      return false;
+    }
+    if (!/[!@#$%^&*]/.test(formData.password)) {
+      setError(
+        "Password must contain at least one special character (!@#$%^&*)"
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Add password validation on change
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setFormData({ ...formData, password: newPassword });
+    setError(""); // Clear previous errors
   };
 
   return (
@@ -113,9 +158,8 @@ const SignUp: React.FC = () => {
                   type={showPassword.password ? "text" : "password"}
                   required
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
+                  onChange={handlePasswordChange}
+                  onBlur={() => validateForm()}
                   className="w-full pl-10 pr-12 py-2 border border-[#DFE1E6] rounded-sm
                     focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
                   placeholder="Create a secure password"
@@ -137,6 +181,15 @@ const SignUp: React.FC = () => {
                     <FiEye className="w-4 h-4" />
                   )}
                 </button>
+              </div>
+              <div className="text-xs text-[#7A869A] space-y-1 mt-1">
+                <p>Password must:</p>
+                <ul className="list-disc pl-4">
+                  <li>Be at least 8 characters long</li>
+                  <li>Include at least one uppercase letter</li>
+                  <li>Include at least one number</li>
+                  <li>Include at least one special character (!@#$%^&*)</li>
+                </ul>
               </div>
             </div>
 
