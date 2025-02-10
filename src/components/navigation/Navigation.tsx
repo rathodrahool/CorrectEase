@@ -37,7 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({
   );
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const { chats, isLoading, error, fetchChats } = useChat();
+  const { chats, setChats, isLoading, error, fetchChats } = useChat();
 
   React.useEffect(() => {
     fetchChats();
@@ -61,15 +61,12 @@ const Navigation: React.FC<NavigationProps> = ({
     setIsDeleting(true);
     try {
       await chatService.deleteChat(deletingChatId);
-      setChats((prevChats) =>
-        prevChats.filter((chat) => chat.id !== deletingChatId)
-      );
       if (activeUserId === deletingChatId) {
         onUserSelect(""); // Clear selected user if deleted
       }
+      await fetchChats(); // Fetch fresh chat list after deletion
     } catch (err) {
       console.error("Error deleting chat:", err);
-      // Could add toast notification here
     } finally {
       setIsDeleting(false);
       setDeletingChatId(null);
