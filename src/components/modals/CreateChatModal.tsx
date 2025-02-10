@@ -1,10 +1,12 @@
 import React from "react";
 import { FiX } from "react-icons/fi";
+import { chatService } from "../../services/chatService";
+import type { ChatResponse } from "../../types/chat";
 
 interface CreateChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; jobProfile: string }) => void;
+  onSubmit: (chat: ChatResponse) => void;
 }
 
 const CreateChatModal: React.FC<CreateChatModalProps> = ({
@@ -14,15 +16,31 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({
 }) => {
   const [name, setName] = React.useState("");
   const [jobProfile, setJobProfile] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ name, jobProfile });
-    setName("");
-    setJobProfile("");
-    onClose();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await chatService.createChat({
+        name,
+        jobProfile,
+      });
+      onSubmit(response);
+      setName("");
+      setJobProfile("");
+      onClose();
+    } catch (err) {
+      setError("Failed to create chat. Please try again.");
+      console.error("Create chat error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,6 +64,11 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
+          {error && (
+            <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm rounded">
+              {error}
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <label
@@ -93,15 +116,17 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({
               onClick={onClose}
               className="px-3 py-2 text-sm font-medium text-[#42526E] 
                 hover:bg-[#F4F5F7] rounded-sm transition-colors"
+              disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="px-3 py-2 text-sm font-medium text-white bg-[#0052CC]
-                hover:bg-[#0065FF] rounded-sm transition-colors"
+                hover:bg-[#0065FF] rounded-sm transition-colors disabled:opacity-50"
+              disabled={isLoading}
             >
-              Create Chat
+              {isLoading ? "Creating..." : "Create Chat"}
             </button>
           </div>
         </form>

@@ -7,6 +7,8 @@ import {
   FiEdit3,
 } from "react-icons/fi";
 import CreateChatModal from "../modals/CreateChatModal";
+import { chatService } from "../../services/chatService";
+import type { Chat } from "../../types/chat";
 
 export type ActiveTab = "editor" | "history";
 
@@ -36,33 +38,6 @@ interface SavedText {
   timestamp: string;
 }
 
-const mockChats: ChatUser[] = [
-  {
-    id: "1",
-    name: "Yagnik Gohil",
-    online: true,
-    lastMessage: "Last enhanced: 'Thanks for the help...'",
-    timestamp: "2m",
-    savedTexts: [
-      {
-        id: "t1",
-        originalText: "thanks for the help with...",
-        enhancedText: "Thank you for your assistance with...",
-        style: "formal",
-        timestamp: new Date().toISOString(),
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Tushar Panchal",
-    online: false,
-    lastMessage: "Could you check this...",
-    timestamp: "1h",
-  },
-  // Add more mock data as needed
-];
-
 const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onTabChange,
@@ -70,18 +45,49 @@ const Navigation: React.FC<NavigationProps> = ({
   onUserSelect,
 }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [chats, setChats] = React.useState<ChatUser[]>(mockChats);
+  const [chats, setChats] = React.useState<Chat[]>([]);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleCreateChat = (data: { name: string; jobProfile: string }) => {
-    const newChat: ChatUser = {
-      id: Date.now().toString(),
-      name: data.name,
-      jobProfile: data.jobProfile,
-      online: true,
-      timestamp: "now",
-    };
+  const fetchChats = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await chatService.getChats({
+        limit: 10,
+        offset: 0,
+        search: searchTerm || undefined,
+        order: { created_at: "DESC" },
+      });
+      setChats(response.data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load chats");
+      console.error("Error loading chats:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm]);
 
-    setChats((prev) => [newChat, ...prev]);
+  React.useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
+
+  const handleCreateChat = async (data: {
+    name: string;
+    jobProfile: string;
+  }) => {
+    try {
+      await chatService.createChat(data);
+      fetchChats(); // Refresh the list after creating new chat
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error("Error creating chat:", err);
+    }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
   return (
@@ -127,6 +133,8 @@ const Navigation: React.FC<NavigationProps> = ({
           <input
             type="text"
             placeholder="Search chats"
+            value={searchTerm}
+            onChange={handleSearch}
             className="w-full py-2 px-2 text-sm text-[#172B4D] placeholder-[#7A869A] bg-transparent focus:outline-none"
           />
         </div>
@@ -149,52 +157,48 @@ const Navigation: React.FC<NavigationProps> = ({
             <FiMessageSquare className="w-4 h-4 mr-2" />
             <span>Recent Corrections</span>
           </h3>
-          <ul className="space-y-1">
-            {chats.map((user) => (
-              <li
-                key={user.id}
-                onClick={() => onUserSelect(user.id)}
-                className={`flex items-center p-2 rounded-sm cursor-pointer transition-colors
-                  ${
-                    activeUserId === user.id
-                      ? "bg-[#DEEBFF]"
-                      : "hover:bg-[#F4F5F7]"
-                  }`}
-              >
-                <div className="relative">
-                  <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium text-sm">
-                    {user.avatar || user.name.charAt(0)}
+
+          {isLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0052CC]" />
+            </div>
+          ) : error ? (
+            <div className="text-red-500 text-sm text-center py-4">{error}</div>
+          ) : (
+            <ul className="space-y-1">
+              {chats.map((chat) => (
+                <li
+                  key={chat.id}
+                  onClick={() => onUserSelect(chat.id)}
+                  className={`flex items-center p-2 rounded-sm cursor-pointer transition-colors
+                    ${
+                      activeUserId === chat.id
+                        ? "bg-[#DEEBFF]"
+                        : "hover:bg-[#F4F5F7]"
+                    }`}
+                >
+                  <div className="relative">
+                    <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium text-sm">
+                      {chat.name.charAt(0)}
+                    </div>
                   </div>
-                  {user.online && (
-                    <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#2684FF] rounded-full border-2 border-white" />
-                  )}
-                </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-[#172B4D] truncate">
-                      {user.name}
-                    </span>
-                    {user.timestamp && (
-                      <span className="text-xs text-[#7A869A]">
-                        {user.timestamp}
+                  <div className="ml-3 flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-[#172B4D] truncate">
+                        {chat.name}
                       </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-[#7A869A] truncate">
-                    {user.jobProfile}
-                  </p>
-                  {user.lastMessage && (
-                    <p className="text-xs text-[#7A869A] truncate flex items-center gap-1">
-                      {user.savedTexts && user.savedTexts.length > 0 && (
-                        <FiCheckCircle className="w-3 h-3 text-[#0052CC]" />
-                      )}
-                      {user.lastMessage}
+                      <span className="text-xs text-[#7A869A]">
+                        {new Date(chat.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#7A869A] truncate">
+                      {chat.jobProfile}
                     </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
