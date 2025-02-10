@@ -87,11 +87,15 @@ const Editor: React.FC = () => {
     fetchChats,
   } = useChat();
 
+  const selectedChatData = chats.find((chat) => chat.id === selectedUser);
+
   const handleSave = React.useCallback(async () => {
-    if (!selectedUser || !isDirty) return;
+    if (!selectedUser || !originalText || enhancedVersions.length === 0) return;
 
     try {
-      const updateData: Partial<CreateChatDto> = {
+      const createData: CreateChatDto = {
+        name: selectedChatData?.name ?? "",
+        jobProfile: selectedChatData?.jobProfile ?? "",
         originalText,
         enhancedTexts: enhancedVersions.map((version) => ({
           text: version.text,
@@ -99,20 +103,24 @@ const Editor: React.FC = () => {
         })),
       };
 
-      await chatService.updateChat(selectedUser, updateData);
+      await chatService.createChat(createData);
       setIsDirty(false);
+      await fetchChats();
     } catch (error) {
       console.error("Error saving chat:", error);
-      throw error; // Rethrow to trigger error state in useAutoSave
+      throw error;
     }
-  }, [selectedUser, isDirty, originalText, enhancedVersions]);
+  }, [
+    selectedUser,
+    originalText,
+    enhancedVersions,
+    selectedChatData,
+    fetchChats,
+  ]);
 
-  const { setHasChanges, saveState, forceSave } = useAutoSave({
+  const { setHasChanges, saveState, scheduleSave } = useAutoSave({
     onSave: handleSave,
-    interval: 30000, // Every 30 seconds
-    debounceMs: 3000, // Wait 3 seconds after typing
-    minLength: 20, // Min 20 chars before auto-saving
-    minTimeBetweenSaves: 5000, // Min 5 seconds between saves
+    delay: 5000, // 5 seconds delay
   });
 
   React.useEffect(() => {
@@ -132,63 +140,21 @@ const Editor: React.FC = () => {
     fetchChats();
   }, [fetchChats]);
 
-  const selectedChatData = chats.find((chat) => chat.id === selectedUser);
-
   const updateCounts = (text: string) => {
     setCharCount(text.length);
     setWordCount(text.trim() === "" ? 0 : text.trim().split(/\s+/).length);
   };
 
-  const handleTextChange = React.useCallback(
-    (text: string) => {
-      setOriginalText(text);
-      updateCounts(text);
-      setIsDirty(true);
-      setHasChanges(true, text.length); // Pass text length to auto-save hook
-    },
-    [setHasChanges]
-  );
-
-  // Save when changing users
-  React.useEffect(() => {
-    if (isDirty && selectedUser) {
-      forceSave();
-    }
-  }, [selectedUser, isDirty, forceSave]);
-
-  // Add cleanup on unmount
-  React.useEffect(() => {
-    return () => {
-      if (isDirty) {
-        handleSave();
-      }
-    };
-  }, [isDirty, handleSave]);
-
-  const saveText = (text: string) => {
-    // Save to localStorage or your backend
-    const savedText: SavedText = {
-      id: Date.now().toString(),
-      userId: selectedUser,
-      originalText: text,
-      enhancedText: enhancedText, // This would be the processed text
-      style: selectedStyle,
-      timestamp: new Date().toISOString(),
-    };
-    // Save logic here
-  };
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(enhancedText);
-    setTimeout(() => setCopiedVersionId(null), 2000);
-  };
+  const handleTextChange = React.useCallback((text: string) => {
+    setOriginalText(text);
+    updateCounts(text);
+  }, []);
 
   const handleEnhance = async () => {
     setIsEnhancing(true);
     try {
       const customization =
         TextEnhancerService.mapCustomizationToApi(customSettings);
-
       const result = await TextEnhancerService.enhanceText({
         text: originalText,
         style: selectedStyle,
@@ -203,17 +169,42 @@ const Editor: React.FC = () => {
             style: selectedStyle,
           }))
         );
+        // Only trigger save after successful enhancement
+        setIsDirty(true);
+        setHasChanges(true);
+        scheduleSave(); // Schedule save with 5 second delay
       } else {
         throw new Error(result.message);
       }
-      setIsDirty(true);
-      setHasChanges(true);
     } catch (error) {
       console.error("Error enhancing text:", error);
-      // You might want to show an error message to the user here
     } finally {
       setIsEnhancing(false);
     }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (isDirty) {
+        handleSave().catch(console.error);
+      }
+    };
+  }, [isDirty, handleSave]);
+
+  const saveText = (text: string) => {
+    const savedText: SavedText = {
+      id: Date.now().toString(),
+      userId: selectedUser,
+      originalText: text,
+      enhancedText: enhancedText,
+      style: selectedStyle,
+      timestamp: new Date().toISOString(),
+    };
+  };
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(enhancedText);
+    setTimeout(() => setCopiedVersionId(null), 2000);
   };
 
   const insertDemoText = () => {
@@ -229,7 +220,6 @@ const Editor: React.FC = () => {
   const handleCustomizeSave = (settings: CustomizeSettings) => {
     setCustomSettings(settings);
     setIsCustomizeOpen(false);
-    // You can use these settings in your handleEnhance function
   };
 
   const handleCopyVersion = async (text: string, versionId: string) => {
@@ -242,10 +232,46 @@ const Editor: React.FC = () => {
     }
   };
 
+  const dropdownButton = (
+    <button
+      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+      className="flex items-center gap-2 px-3 py-1.5 text-sm border border-[#DFE1E6] 
+        text-[#172B4D] hover:bg-[#F4F5F7] transition-colors
+        focus:border-[#2684FF] focus:outline-none focus:ring-2 
+        focus:ring-[#2684FF] focus:ring-opacity-25 min-w-[200px]
+        justify-between"
+    >
+      {isLoadingChats ? (
+        <span className="text-[#7A869A]">Loading chats...</span>
+      ) : chatError ? (
+        <span className="text-red-600">Error loading chats</span>
+      ) : (
+        <div className="flex items-center gap-2">
+          {selectedUser && selectedChatData ? (
+            <>
+              <div
+                className="w-6 h-6 bg-[#DFE1E6] flex items-center 
+                justify-center text-[#42526E] text-xs font-medium"
+              >
+                {selectedChatData.name.charAt(0)}
+              </div>
+              <span>{selectedChatData.name}</span>
+            </>
+          ) : (
+            <span className="text-[#7A869A]">Select a chat</span>
+          )}
+        </div>
+      )}
+      <FiChevronDown
+        className={`w-4 h-4 text-[#42526E] transition-transform
+          ${isDropdownOpen ? "transform rotate-180" : ""}`}
+      />
+    </button>
+  );
+
   return (
     <div className="h-full max-w-5xl mx-auto p-6">
       <div className="bg-white border border-[#DFE1E6] shadow-sm">
-        {/* User Selection Header */}
         <div className="px-6 py-3 border-b border-[#DFE1E6] flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-[#42526E]">
@@ -253,41 +279,7 @@ const Editor: React.FC = () => {
               <span className="text-sm font-medium">Select Chat:</span>
             </div>
             <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm border border-[#DFE1E6] 
-                text-[#172B4D] hover:bg-[#F4F5F7] transition-colors
-                focus:border-[#2684FF] focus:outline-none focus:ring-2 
-                focus:ring-[#2684FF] focus:ring-opacity-25 min-w-[200px]
-                justify-between"
-              >
-                {isLoadingChats ? (
-                  <span className="text-[#7A869A]">Loading chats...</span>
-                ) : chatError ? (
-                  <span className="text-red-600">Error loading chats</span>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {selectedUser ? (
-                      <>
-                        <div
-                          className="w-6 h-6 bg-[#DFE1E6] flex items-center 
-                      justify-center text-[#42526E] text-xs font-medium"
-                        >
-                          {selectedChatData?.name.charAt(0)}
-                        </div>
-                        <span>{selectedChatData?.name}</span>
-                      </>
-                    ) : (
-                      <span className="text-[#7A869A]">Select a chat</span>
-                    )}
-                  </div>
-                )}
-                <FiChevronDown
-                  className={`w-4 h-4 text-[#42526E] transition-transform
-                ${isDropdownOpen ? "transform rotate-180" : ""}`}
-                />
-              </button>
-
+              {dropdownButton}
               {isDropdownOpen && (
                 <div
                   className="absolute top-full left-0 mt-1 w-full bg-white border 
@@ -331,12 +323,8 @@ const Editor: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Add save status indicator */}
           {selectedUser && <SaveStatus state={saveState} />}
         </div>
-
-        {/* Style Selection Header */}
         <div className="px-6 py-4 border-b border-[#DFE1E6] flex items-center justify-between">
           <div className="flex items-center gap-4">
             {correctionStyles.map((style) => (
@@ -362,10 +350,7 @@ const Editor: React.FC = () => {
             <span className="text-sm font-medium">Customize</span>
           </button>
         </div>
-
-        {/* Content Area */}
         <div className="grid grid-cols-2 divide-x divide-[#DFE1E6]">
-          {/* Original Text */}
           <div className="p-6 flex flex-col h-[calc(100vh-15rem)]">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -428,8 +413,6 @@ const Editor: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Enhanced Version */}
           <div className="p-6 flex flex-col h-[calc(100vh-15rem)]">
             <h3 className="text-sm font-medium text-[#42526E] mb-3">
               Enhanced Versions
