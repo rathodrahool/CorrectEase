@@ -14,6 +14,7 @@ import ConfirmationModal from "../modals/ConfirmationModal";
 import { chatService } from "../../services/chatService";
 import type { Chat } from "../../types/chat";
 import { useChat } from "../../context/ChatContext";
+import { capitalizeFirstLetters } from "../../utils/textFormatters";
 
 export type ActiveTab = "editor" | "history";
 
@@ -200,17 +201,19 @@ const Navigation: React.FC<NavigationProps> = ({
                                 : "bg-[#DFE1E6] text-[#42526E] group-hover:bg-[#0052CC] group-hover:text-white"
                             }`}
                         >
-                          {chat.name.charAt(0).toUpperCase()}
+                          {capitalizeFirstLetters(chat.name).charAt(0)}
                         </div>
                       </div>
                       <div className="ml-3 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-[#172B4D] truncate">
-                            {chat.name}
+                            {capitalizeFirstLetters(chat.name)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-[#7A869A]">
-                          <span className="truncate">{chat.jobProfile}</span>
+                          <span className="truncate">
+                            {capitalizeFirstLetters(chat.jobProfile)}
+                          </span>
                           <span className="text-[#DFE1E6]">•</span>
                           <span className="whitespace-nowrap">
                             {new Date(chat.created_at).toLocaleDateString()}
