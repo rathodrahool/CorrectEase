@@ -10,6 +10,7 @@ import {
   FiBookOpen,
 } from "react-icons/fi";
 import CustomizeModal, { CustomizeSettings } from "./CustomizeModal";
+import { TextEnhancerService } from "../../services/textEnhancerService";
 
 interface CorrectionStyle {
   id: string;
@@ -30,33 +31,6 @@ interface EnhancedVersion {
   id: string;
   text: string;
   style: string;
-}
-
-interface EnhancerRequest {
-  text: string;
-  style: string;
-  customization: {
-    tone: string;
-    formality: string;
-    length: string;
-    creativity: string;
-  };
-}
-
-interface EnhancerResponse {
-  status: number;
-  message: string;
-  data: {
-    originalText: string;
-    style: string;
-    customization: {
-      tone: string;
-      formality: string;
-      length: string;
-      creativity: string;
-    };
-    enhancedVersions: string[];
-  };
 }
 
 const correctionStyles: CorrectionStyle[] = [
@@ -155,49 +129,14 @@ const Editor: React.FC = () => {
   const handleEnhance = async () => {
     setIsEnhancing(true);
     try {
-      const payload: EnhancerRequest = {
+      const customization =
+        TextEnhancerService.mapCustomizationToApi(customSettings);
+
+      const result = await TextEnhancerService.enhanceText({
         text: originalText,
         style: selectedStyle,
-        customization: {
-          tone:
-            customSettings.tone >= 75
-              ? "friendly"
-              : customSettings.tone <= 25
-              ? "formal"
-              : "semi-formal",
-          formality:
-            customSettings.formality >= 75
-              ? "formal"
-              : customSettings.formality <= 25
-              ? "casual"
-              : "semi-formal",
-          length:
-            customSettings.length >= 75
-              ? "longer"
-              : customSettings.length <= 25
-              ? "shorter"
-              : "similar",
-          creativity:
-            customSettings.creativity >= 75
-              ? "high"
-              : customSettings.creativity <= 25
-              ? "low"
-              : "moderate",
-        },
-      };
-
-      const response = await fetch(
-        "http://localhost:3000/api/text-enhancer/enhance",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const result: EnhancerResponse = await response.json();
+        customization,
+      });
 
       if (result.status === 1) {
         setEnhancedVersions(
