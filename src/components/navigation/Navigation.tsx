@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  FiSearch,
-  FiPlus,
-  FiMessageSquare,
-  FiCheckCircle,
-  FiEdit3,
-} from "react-icons/fi";
+import { FiSearch, FiPlus, FiMessageSquare, FiEdit3 } from "react-icons/fi";
 import CreateChatModal from "../modals/CreateChatModal";
 import { chatService } from "../../services/chatService";
 import type { Chat } from "../../types/chat";
@@ -19,25 +13,6 @@ interface NavigationProps {
   onUserSelect: (userId: string) => void;
 }
 
-interface ChatUser {
-  id: string;
-  name: string;
-  avatar?: string;
-  online: boolean;
-  lastMessage?: string;
-  timestamp?: string;
-  savedTexts?: SavedText[];
-  jobProfile?: string;
-}
-
-interface SavedText {
-  id: string;
-  originalText: string;
-  enhancedText: string;
-  style: string;
-  timestamp: string;
-}
-
 const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onTabChange,
@@ -47,10 +22,10 @@ const Navigation: React.FC<NavigationProps> = ({
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [chats, setChats] = React.useState<Chat[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const fetchChats = React.useCallback(async () => {
+  const fetchChats = async () => {
     try {
       setIsLoading(true);
       const response = await chatService.getChats({
@@ -67,32 +42,26 @@ const Navigation: React.FC<NavigationProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm]);
+  };
 
   React.useEffect(() => {
     fetchChats();
-  }, [fetchChats]);
-
-  const handleCreateChat = async (data: {
-    name: string;
-    jobProfile: string;
-  }) => {
-    try {
-      await chatService.createChat(data);
-      fetchChats(); // Refresh the list after creating new chat
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error("Error creating chat:", err);
-    }
-  };
+  }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    const timeoutId = setTimeout(() => {
+      fetchChats();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const handleChatCreated = (newChats: Chat[]) => {
+    setChats(newChats);
   };
 
   return (
     <nav className="w-64 h-screen bg-[#FAFBFC] border-r border-[#DFE1E6] flex flex-col sticky top-0 z-30">
-      {/* Add logo and brand name */}
       <div className="p-4 border-b border-[#DFE1E6]">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 bg-[#0052CC] rounded-sm flex items-center justify-center text-white font-bold text-lg">
@@ -205,7 +174,7 @@ const Navigation: React.FC<NavigationProps> = ({
       <CreateChatModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateChat}
+        onChatCreated={handleChatCreated}
       />
     </nav>
   );

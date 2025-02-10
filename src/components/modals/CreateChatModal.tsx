@@ -1,18 +1,18 @@
 import React from "react";
 import { FiX } from "react-icons/fi";
 import { chatService } from "../../services/chatService";
-import type { ChatResponse } from "../../types/chat";
+import type { Chat } from "../../types/chat";
 
 interface CreateChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (chat: ChatResponse) => void;
+  onChatCreated: (chats: Chat[]) => void;
 }
 
 const CreateChatModal: React.FC<CreateChatModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
+  onChatCreated,
 }) => {
   const [name, setName] = React.useState("");
   const [jobProfile, setJobProfile] = React.useState("");
@@ -27,11 +27,22 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({
     setError(null);
 
     try {
-      const response = await chatService.createChat({
+      // First create the chat
+      await chatService.createChat({
         name,
         jobProfile,
       });
-      onSubmit(response);
+
+      // Then fetch updated chat list
+      const response = await chatService.getChats({
+        limit: 10,
+        offset: 0,
+        order: { created_at: "DESC" },
+      });
+
+      // Update parent component with new chat list
+      onChatCreated(response.data);
+
       setName("");
       setJobProfile("");
       onClose();
