@@ -20,4 +20,12 @@ export const chatService = {
   deleteChat: async (chatId: string): Promise<void> => {
     await api.delete(`/chat/${chatId}`);
   },
+
+  updateChat: async (
+    chatId: string,
+    data: Partial<CreateChatDto>
+  ): Promise<ChatResponse> => {
+    const response = await api.patch<ChatResponse>(`/chat/${chatId}`, data);
+    return response.data;
+  },
 };

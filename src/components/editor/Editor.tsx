@@ -14,6 +14,8 @@ import { TextEnhancerService } from "../../services/textEnhancerService";
 import { chatService } from "../../services/chatService";
 import type { Chat } from "../../types/chat";
 import { useChat } from "../../context/ChatContext";
+import { useAutoSave } from "../../hooks/useAutoSave";
+import SaveStatus from "../common/SaveStatus";
 
 interface CorrectionStyle {
   id: string;
@@ -76,6 +78,7 @@ const Editor: React.FC = () => {
   const [copiedVersionId, setCopiedVersionId] = React.useState<string | null>(
     null
   );
+  const [isDirty, setIsDirty] = React.useState(false);
 
   const {
     chats,
@@ -83,6 +86,34 @@ const Editor: React.FC = () => {
     error: chatError,
     fetchChats,
   } = useChat();
+
+  const handleSave = React.useCallback(async () => {
+    if (!selectedUser || !isDirty) return;
+
+    try {
+      const updateData: Partial<CreateChatDto> = {
+        originalText,
+        enhancedTexts: enhancedVersions.map((version) => ({
+          text: version.text,
+          type: version.style,
+        })),
+      };
+
+      await chatService.updateChat(selectedUser, updateData);
+      setIsDirty(false);
+    } catch (error) {
+      console.error("Error saving chat:", error);
+      throw error; // Rethrow to trigger error state in useAutoSave
+    }
+  }, [selectedUser, isDirty, originalText, enhancedVersions]);
+
+  const { setHasChanges, saveState, forceSave } = useAutoSave({
+    onSave: handleSave,
+    interval: 30000, // Every 30 seconds
+    debounceMs: 3000, // Wait 3 seconds after typing
+    minLength: 20, // Min 20 chars before auto-saving
+    minTimeBetweenSaves: 5000, // Min 5 seconds between saves
+  });
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -108,14 +139,31 @@ const Editor: React.FC = () => {
     setWordCount(text.trim() === "" ? 0 : text.trim().split(/\s+/).length);
   };
 
-  const handleTextChange = (text: string) => {
-    setOriginalText(text);
-    updateCounts(text);
-    // Auto-save logic would go here
-    if (selectedUser) {
-      saveText(text);
+  const handleTextChange = React.useCallback(
+    (text: string) => {
+      setOriginalText(text);
+      updateCounts(text);
+      setIsDirty(true);
+      setHasChanges(true, text.length); // Pass text length to auto-save hook
+    },
+    [setHasChanges]
+  );
+
+  // Save when changing users
+  React.useEffect(() => {
+    if (isDirty && selectedUser) {
+      forceSave();
     }
-  };
+  }, [selectedUser, isDirty, forceSave]);
+
+  // Add cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (isDirty) {
+        handleSave();
+      }
+    };
+  }, [isDirty, handleSave]);
 
   const saveText = (text: string) => {
     // Save to localStorage or your backend
@@ -158,6 +206,8 @@ const Editor: React.FC = () => {
       } else {
         throw new Error(result.message);
       }
+      setIsDirty(true);
+      setHasChanges(true);
     } catch (error) {
       console.error("Error enhancing text:", error);
       // You might want to show an error message to the user here
@@ -196,89 +246,94 @@ const Editor: React.FC = () => {
     <div className="h-full max-w-5xl mx-auto p-6">
       <div className="bg-white border border-[#DFE1E6] shadow-sm">
         {/* User Selection Header */}
-        <div className="px-6 py-3 border-b border-[#DFE1E6] flex items-center gap-4">
-          <div className="flex items-center gap-2 text-[#42526E]">
-            <FiUser className="w-4 h-4" />
-            <span className="text-sm font-medium">Select Chat:</span>
-          </div>
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm border border-[#DFE1E6] 
+        <div className="px-6 py-3 border-b border-[#DFE1E6] flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-[#42526E]">
+              <FiUser className="w-4 h-4" />
+              <span className="text-sm font-medium">Select Chat:</span>
+            </div>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm border border-[#DFE1E6] 
                 text-[#172B4D] hover:bg-[#F4F5F7] transition-colors
                 focus:border-[#2684FF] focus:outline-none focus:ring-2 
                 focus:ring-[#2684FF] focus:ring-opacity-25 min-w-[200px]
                 justify-between"
-            >
-              {isLoadingChats ? (
-                <span className="text-[#7A869A]">Loading chats...</span>
-              ) : chatError ? (
-                <span className="text-red-600">Error loading chats</span>
-              ) : (
-                <div className="flex items-center gap-2">
-                  {selectedUser ? (
-                    <>
-                      <div
-                        className="w-6 h-6 bg-[#DFE1E6] flex items-center 
-                      justify-center text-[#42526E] text-xs font-medium"
-                      >
-                        {selectedChatData?.name.charAt(0)}
-                      </div>
-                      <span>{selectedChatData?.name}</span>
-                    </>
-                  ) : (
-                    <span className="text-[#7A869A]">Select a chat</span>
-                  )}
-                </div>
-              )}
-              <FiChevronDown
-                className={`w-4 h-4 text-[#42526E] transition-transform
-                ${isDropdownOpen ? "transform rotate-180" : ""}`}
-              />
-            </button>
-
-            {isDropdownOpen && (
-              <div
-                className="absolute top-full left-0 mt-1 w-full bg-white border 
-                border-[#DFE1E6] shadow-lg z-40 py-1 max-h-60 overflow-y-auto"
               >
-                {chats.map((chat) => (
-                  <button
-                    key={chat.id}
-                    onClick={() => {
-                      setSelectedUser(chat.id);
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm
+                {isLoadingChats ? (
+                  <span className="text-[#7A869A]">Loading chats...</span>
+                ) : chatError ? (
+                  <span className="text-red-600">Error loading chats</span>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {selectedUser ? (
+                      <>
+                        <div
+                          className="w-6 h-6 bg-[#DFE1E6] flex items-center 
+                      justify-center text-[#42526E] text-xs font-medium"
+                        >
+                          {selectedChatData?.name.charAt(0)}
+                        </div>
+                        <span>{selectedChatData?.name}</span>
+                      </>
+                    ) : (
+                      <span className="text-[#7A869A]">Select a chat</span>
+                    )}
+                  </div>
+                )}
+                <FiChevronDown
+                  className={`w-4 h-4 text-[#42526E] transition-transform
+                ${isDropdownOpen ? "transform rotate-180" : ""}`}
+                />
+              </button>
+
+              {isDropdownOpen && (
+                <div
+                  className="absolute top-full left-0 mt-1 w-full bg-white border 
+                border-[#DFE1E6] shadow-lg z-40 py-1 max-h-60 overflow-y-auto"
+                >
+                  {chats.map((chat) => (
+                    <button
+                      key={chat.id}
+                      onClick={() => {
+                        setSelectedUser(chat.id);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm
                       hover:bg-[#F4F5F7] transition-colors
                       ${
                         selectedUser === chat.id
                           ? "bg-[#DEEBFF] text-[#0052CC]"
                           : "text-[#172B4D]"
                       }`}
-                  >
-                    <div
-                      className={`w-6 h-6 flex items-center justify-center 
+                    >
+                      <div
+                        className={`w-6 h-6 flex items-center justify-center 
                       text-xs font-medium
                       ${
                         selectedUser === chat.id
                           ? "bg-[#0052CC] text-white"
                           : "bg-[#DFE1E6] text-[#42526E]"
                       }`}
-                    >
-                      {chat.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <span className="block font-medium">{chat.name}</span>
-                      <span className="text-xs text-[#7A869A]">
-                        {chat.jobProfile}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                      >
+                        {chat.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <span className="block font-medium">{chat.name}</span>
+                        <span className="text-xs text-[#7A869A]">
+                          {chat.jobProfile}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Add save status indicator */}
+          {selectedUser && <SaveStatus state={saveState} />}
         </div>
 
         {/* Style Selection Header */}
