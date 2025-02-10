@@ -1,6 +1,13 @@
 import React from "react";
-import { FiSearch, FiPlus, FiMessageSquare, FiEdit3 } from "react-icons/fi";
+import {
+  FiSearch,
+  FiPlus,
+  FiMessageSquare,
+  FiEdit3,
+  FiTrash2,
+} from "react-icons/fi";
 import CreateChatModal from "../modals/CreateChatModal";
+import ConfirmationModal from "../modals/ConfirmationModal";
 import { chatService } from "../../services/chatService";
 import type { Chat } from "../../types/chat";
 
@@ -24,6 +31,10 @@ const Navigation: React.FC<NavigationProps> = ({
   const [searchTerm, setSearchTerm] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [deletingChatId, setDeletingChatId] = React.useState<string | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const fetchChats = async () => {
     try {
@@ -58,6 +69,27 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const handleChatCreated = (newChats: Chat[]) => {
     setChats(newChats);
+  };
+
+  const handleDeleteChat = async () => {
+    if (!deletingChatId) return;
+
+    setIsDeleting(true);
+    try {
+      await chatService.deleteChat(deletingChatId);
+      setChats((prevChats) =>
+        prevChats.filter((chat) => chat.id !== deletingChatId)
+      );
+      if (activeUserId === deletingChatId) {
+        onUserSelect(""); // Clear selected user if deleted
+      }
+    } catch (err) {
+      console.error("Error deleting chat:", err);
+      // Could add toast notification here
+    } finally {
+      setIsDeleting(false);
+      setDeletingChatId(null);
+    }
   };
 
   return (
@@ -138,32 +170,47 @@ const Navigation: React.FC<NavigationProps> = ({
               {chats.map((chat) => (
                 <li
                   key={chat.id}
-                  onClick={() => onUserSelect(chat.id)}
-                  className={`flex items-center p-2 rounded-sm cursor-pointer transition-colors
+                  className={`flex items-center p-2 rounded-sm cursor-pointer transition-colors group
                     ${
                       activeUserId === chat.id
                         ? "bg-[#DEEBFF]"
                         : "hover:bg-[#F4F5F7]"
                     }`}
                 >
-                  <div className="relative">
-                    <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium text-sm">
-                      {chat.name.charAt(0)}
+                  <div
+                    className="flex-1 flex items-center min-w-0"
+                    onClick={() => onUserSelect(chat.id)}
+                  >
+                    <div className="relative">
+                      <div className="w-8 h-8 bg-[#DFE1E6] rounded-sm flex items-center justify-center text-[#42526E] font-medium text-sm">
+                        {chat.name.charAt(0)}
+                      </div>
+                    </div>
+                    <div className="ml-3 flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-[#172B4D] truncate">
+                          {chat.name}
+                        </span>
+                        <span className="text-xs text-[#7A869A]">
+                          {new Date(chat.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#7A869A] truncate">
+                        {chat.jobProfile}
+                      </p>
                     </div>
                   </div>
-                  <div className="ml-3 flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#172B4D] truncate">
-                        {chat.name}
-                      </span>
-                      <span className="text-xs text-[#7A869A]">
-                        {new Date(chat.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#7A869A] truncate">
-                      {chat.jobProfile}
-                    </p>
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingChatId(chat.id);
+                    }}
+                    className="p-1.5 text-[#42526E] hover:bg-[#FF563014] hover:text-[#FF5630] 
+                      rounded-sm transition-colors opacity-0 group-hover:opacity-100"
+                    title="Delete chat"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
                 </li>
               ))}
             </ul>
@@ -175,6 +222,15 @@ const Navigation: React.FC<NavigationProps> = ({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onChatCreated={handleChatCreated}
+      />
+
+      <ConfirmationModal
+        isOpen={!!deletingChatId}
+        onClose={() => setDeletingChatId(null)}
+        onConfirm={handleDeleteChat}
+        title="Delete Chat"
+        message="Are you sure you want to delete this chat? This action cannot be undone."
+        isLoading={isDeleting}
       />
     </nav>
   );

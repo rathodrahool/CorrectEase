@@ -16,4 +16,8 @@ export const chatService = {
     const response = await api.get<ChatListResponse>("/chat", { params });
     return response.data;
   },
+
+  deleteChat: async (chatId: string): Promise<void> => {
+    await api.delete(`/chat/${chatId}`);
+  },
 };
