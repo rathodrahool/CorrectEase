@@ -32,6 +32,33 @@ interface EnhancedVersion {
   style: string;
 }
 
+interface EnhancerRequest {
+  text: string;
+  style: string;
+  customization: {
+    tone: string;
+    formality: string;
+    length: string;
+    creativity: string;
+  };
+}
+
+interface EnhancerResponse {
+  status: number;
+  message: string;
+  data: {
+    originalText: string;
+    style: string;
+    customization: {
+      tone: string;
+      formality: string;
+      length: string;
+      creativity: string;
+    };
+    enhancedVersions: string[];
+  };
+}
+
 const correctionStyles: CorrectionStyle[] = [
   {
     id: "standard",
@@ -125,30 +152,70 @@ const Editor: React.FC = () => {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleEnhance = () => {
+  const handleEnhance = async () => {
     setIsEnhancing(true);
-    // Simulating API call delay with custom settings
-    setTimeout(() => {
-      const demoEnhancements: EnhancedVersion[] = [
-        {
-          id: "1",
-          text: `${originalText} (Enhanced with tone: ${customSettings.tone}%, formality: ${customSettings.formality}%)`,
-          style: "formal",
+    try {
+      const payload: EnhancerRequest = {
+        text: originalText,
+        style: selectedStyle,
+        customization: {
+          tone:
+            customSettings.tone >= 75
+              ? "friendly"
+              : customSettings.tone <= 25
+              ? "formal"
+              : "semi-formal",
+          formality:
+            customSettings.formality >= 75
+              ? "formal"
+              : customSettings.formality <= 25
+              ? "casual"
+              : "semi-formal",
+          length:
+            customSettings.length >= 75
+              ? "longer"
+              : customSettings.length <= 25
+              ? "shorter"
+              : "similar",
+          creativity:
+            customSettings.creativity >= 75
+              ? "high"
+              : customSettings.creativity <= 25
+              ? "low"
+              : "moderate",
         },
+      };
+
+      const response = await fetch(
+        "http://localhost:3000/api/text-enhancer/enhance",
         {
-          id: "2",
-          text: `${originalText} (Casual Version: Here's a friendly way to say it!)`,
-          style: "casual",
-        },
-        {
-          id: "3",
-          text: `${originalText} (Concise Version: Shortened for clarity.)`,
-          style: "concise",
-        },
-      ];
-      setEnhancedVersions(demoEnhancements);
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result: EnhancerResponse = await response.json();
+
+      if (result.status === 1) {
+        setEnhancedVersions(
+          result.data.enhancedVersions.map((text, index) => ({
+            id: index.toString(),
+            text,
+            style: selectedStyle,
+          }))
+        );
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error("Error enhancing text:", error);
+      // You might want to show an error message to the user here
+    } finally {
       setIsEnhancing(false);
-    }, 1500);
+    }
   };
 
   const insertDemoText = () => {
