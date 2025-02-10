@@ -11,6 +11,9 @@ import {
 } from "react-icons/fi";
 import CustomizeModal, { CustomizeSettings } from "./CustomizeModal";
 import { TextEnhancerService } from "../../services/textEnhancerService";
+import { chatService } from "../../services/chatService";
+import type { Chat } from "../../types/chat";
+import { useChat } from "../../context/ChatContext";
 
 interface CorrectionStyle {
   id: string;
@@ -74,11 +77,12 @@ const Editor: React.FC = () => {
     null
   );
 
-  // Mock users - this would come from your chat list
-  const mockUsers = [
-    { id: "1", name: "Yagnik Gohil" },
-    { id: "2", name: "Tushar Panchal" },
-  ];
+  const {
+    chats,
+    isLoading: isLoadingChats,
+    error: chatError,
+    fetchChats,
+  } = useChat();
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -93,7 +97,11 @@ const Editor: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedUserData = mockUsers.find((user) => user.id === selectedUser);
+  React.useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
+
+  const selectedChatData = chats.find((chat) => chat.id === selectedUser);
 
   const updateCounts = (text: string) => {
     setCharCount(text.length);
@@ -202,21 +210,27 @@ const Editor: React.FC = () => {
                 focus:ring-[#2684FF] focus:ring-opacity-25 min-w-[200px]
                 justify-between"
             >
-              <div className="flex items-center gap-2">
-                {selectedUser ? (
-                  <>
-                    <div
-                      className="w-6 h-6 bg-[#DFE1E6] flex items-center 
+              {isLoadingChats ? (
+                <span className="text-[#7A869A]">Loading chats...</span>
+              ) : chatError ? (
+                <span className="text-red-600">Error loading chats</span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {selectedUser ? (
+                    <>
+                      <div
+                        className="w-6 h-6 bg-[#DFE1E6] flex items-center 
                       justify-center text-[#42526E] text-xs font-medium"
-                    >
-                      {selectedUserData?.name.charAt(0)}
-                    </div>
-                    <span>{selectedUserData?.name}</span>
-                  </>
-                ) : (
-                  <span className="text-[#7A869A]">Select a user</span>
-                )}
-              </div>
+                      >
+                        {selectedChatData?.name.charAt(0)}
+                      </div>
+                      <span>{selectedChatData?.name}</span>
+                    </>
+                  ) : (
+                    <span className="text-[#7A869A]">Select a chat</span>
+                  )}
+                </div>
+              )}
               <FiChevronDown
                 className={`w-4 h-4 text-[#42526E] transition-transform
                 ${isDropdownOpen ? "transform rotate-180" : ""}`}
@@ -226,19 +240,19 @@ const Editor: React.FC = () => {
             {isDropdownOpen && (
               <div
                 className="absolute top-full left-0 mt-1 w-full bg-white border 
-                border-[#DFE1E6] shadow-lg z-40 py-1"
+                border-[#DFE1E6] shadow-lg z-40 py-1 max-h-60 overflow-y-auto"
               >
-                {mockUsers.map((user) => (
+                {chats.map((chat) => (
                   <button
-                    key={user.id}
+                    key={chat.id}
                     onClick={() => {
-                      setSelectedUser(user.id);
+                      setSelectedUser(chat.id);
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm
                       hover:bg-[#F4F5F7] transition-colors
                       ${
-                        selectedUser === user.id
+                        selectedUser === chat.id
                           ? "bg-[#DEEBFF] text-[#0052CC]"
                           : "text-[#172B4D]"
                       }`}
@@ -247,14 +261,19 @@ const Editor: React.FC = () => {
                       className={`w-6 h-6 flex items-center justify-center 
                       text-xs font-medium
                       ${
-                        selectedUser === user.id
+                        selectedUser === chat.id
                           ? "bg-[#0052CC] text-white"
                           : "bg-[#DFE1E6] text-[#42526E]"
                       }`}
                     >
-                      {user.name.charAt(0)}
+                      {chat.name.charAt(0)}
                     </div>
-                    <span>{user.name}</span>
+                    <div className="flex-1 text-left">
+                      <span className="block font-medium">{chat.name}</span>
+                      <span className="text-xs text-[#7A869A]">
+                        {chat.jobProfile}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>

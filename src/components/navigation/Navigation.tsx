@@ -13,6 +13,7 @@ import CreateChatModal from "../modals/CreateChatModal";
 import ConfirmationModal from "../modals/ConfirmationModal";
 import { chatService } from "../../services/chatService";
 import type { Chat } from "../../types/chat";
+import { useChat } from "../../context/ChatContext";
 
 export type ActiveTab = "editor" | "history";
 
@@ -30,37 +31,17 @@ const Navigation: React.FC<NavigationProps> = ({
   onUserSelect,
 }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [chats, setChats] = React.useState<Chat[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
   const [deletingChatId, setDeletingChatId] = React.useState<string | null>(
     null
   );
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const fetchChats = async () => {
-    try {
-      setIsLoading(true);
-      const response = await chatService.getChats({
-        limit: 10,
-        offset: 0,
-        search: searchTerm || undefined,
-        order: { created_at: "DESC" },
-      });
-      setChats(response.data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to load chats");
-      console.error("Error loading chats:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { chats, isLoading, error, fetchChats } = useChat();
 
   React.useEffect(() => {
     fetchChats();
-  }, []);
+  }, [fetchChats]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -70,8 +51,8 @@ const Navigation: React.FC<NavigationProps> = ({
     return () => clearTimeout(timeoutId);
   };
 
-  const handleChatCreated = (newChats: Chat[]) => {
-    setChats(newChats);
+  const handleChatCreated = async () => {
+    await fetchChats(); // Just refetch the chats after creation
   };
 
   const handleDeleteChat = async () => {
