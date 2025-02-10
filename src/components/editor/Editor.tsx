@@ -57,7 +57,6 @@ const Editor: React.FC = () => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [charCount, setCharCount] = React.useState(0);
   const [wordCount, setWordCount] = React.useState(0);
-  const [isCopied, setIsCopied] = React.useState(false);
   const [enhancedVersions, setEnhancedVersions] = React.useState<
     EnhancedVersion[]
   >([]);
@@ -70,6 +69,9 @@ const Editor: React.FC = () => {
       length: 50,
       creativity: 50,
     }
+  );
+  const [copiedVersionId, setCopiedVersionId] = React.useState<string | null>(
+    null
   );
 
   // Mock users - this would come from your chat list
@@ -122,8 +124,7 @@ const Editor: React.FC = () => {
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(enhancedText);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    setTimeout(() => setCopiedVersionId(null), 2000);
   };
 
   const handleEnhance = async () => {
@@ -171,6 +172,16 @@ const Editor: React.FC = () => {
     setCustomSettings(settings);
     setIsCustomizeOpen(false);
     // You can use these settings in your handleEnhance function
+  };
+
+  const handleCopyVersion = async (text: string, versionId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedVersionId(versionId);
+      setTimeout(() => setCopiedVersionId(null), 2000);
+    } catch (error) {
+      console.error("Failed to copy:", error);
+    }
   };
 
   return (
@@ -363,14 +374,12 @@ const Editor: React.FC = () => {
                             version.style.slice(1)}
                         </span>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(version.text);
-                            setIsCopied(true);
-                            setTimeout(() => setIsCopied(false), 2000);
-                          }}
+                          onClick={() =>
+                            handleCopyVersion(version.text, version.id)
+                          }
                           className="text-[#42526E] hover:bg-[#F4F5F7] p-1.5 transition-colors"
                         >
-                          {isCopied ? (
+                          {copiedVersionId === version.id ? (
                             <FiCheckCircle className="w-4 h-4 text-[#0052CC]" />
                           ) : (
                             <FiCopy className="w-4 h-4" />
