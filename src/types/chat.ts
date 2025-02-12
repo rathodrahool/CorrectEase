@@ -1,3 +1,5 @@
+import { User } from "./user";
+
 export interface CreateChatDto {
   name: string;
   jobProfile: string;
@@ -23,13 +25,18 @@ export interface ChatListResponse {
   data: Chat[];
 }
 
+export interface EnhancedText {
+  text: string;
+  type: string;
+}
+
 export interface Chat {
   id: string;
   created_at: string;
-  name: string;
-  jobProfile: string;
-  originalText: string | null;
-  enhancedTexts: Array<{ text: string; type: string }> | null;
+  originalText: string;
+  enhancedTexts: EnhancedText[];
+  aiResponse: string | null;
+  user: User;
 }
 
 export interface ChatListParams {

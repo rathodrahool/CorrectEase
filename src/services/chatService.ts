@@ -1,4 +1,5 @@
 import api from "./api";
+import { Chat } from "../types/chat";
 
 export interface CreateChatDto {
   originalText: string;
@@ -19,35 +20,40 @@ export interface ChatResponse {
   updated_at: string;
 }
 
-export const chatService = {
-  createChat: async (
-    userId: string,
-    data: CreateChatDto
-  ): Promise<ChatResponse> => {
+interface ChatListResponse {
+  message: string;
+  total: number;
+  limit: number;
+  offset: number;
+  data: Chat[];
+}
+
+const chatService = {
+  async createChat(userId: string, data: CreateChatDto): Promise<ChatResponse> {
     const response = await api.post<ChatResponse>(`/chat/user/${userId}`, data);
     return response.data;
   },
 
-  getUserChats: async (userId: string): Promise<ChatResponse[]> => {
-    const response = await api.get<ChatResponse[]>(`/chat/user/${userId}`);
+  async getUserChats(userId: string): Promise<ChatListResponse> {
+    const response = await api.get<ChatListResponse>(`/chat/user/${userId}`);
+    if (response.status !== 200) {
+      throw new Error("Failed to fetch user chats");
+    }
     return response.data;
   },
 
-  getChatById: async (
-    userId: string,
-    chatId: string
-  ): Promise<ChatResponse> => {
+  async getChatById(userId: string, chatId: string): Promise<ChatResponse> {
     const response = await api.get<ChatResponse>(
       `/chat/user/${userId}/chat/${chatId}`
     );
     return response.data;
   },
 
-  updateChat: async (
+  async updateChat(
     userId: string,
     chatId: string,
     data: Partial<CreateChatDto>
-  ): Promise<ChatResponse> => {
+  ): Promise<ChatResponse> {
     const response = await api.patch<ChatResponse>(
       `/chat/user/${userId}/chat/${chatId}`,
       data
@@ -55,3 +61,5 @@ export const chatService = {
     return response.data;
   },
 };
+
+export { chatService };
