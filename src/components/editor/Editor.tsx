@@ -13,9 +13,10 @@ import CustomizeModal, { CustomizeSettings } from "./CustomizeModal";
 import { TextEnhancerService } from "../../services/textEnhancerService";
 import { chatService } from "../../services/chatService";
 import type { Chat } from "../../types/chat";
-import { useChat } from "../../context/ChatContext";
 import { useAutoSave } from "../../hooks/useAutoSave";
 import SaveStatus from "../common/SaveStatus";
+import { useUser } from "../../context/UserContext";
+import type { User } from "../../types/user";
 
 interface CorrectionStyle {
   id: string;
@@ -81,21 +82,21 @@ const Editor: React.FC = () => {
   const [isDirty, setIsDirty] = React.useState(false);
 
   const {
-    chats,
-    isLoading: isLoadingChats,
-    error: chatError,
-    fetchChats,
-  } = useChat();
+    users,
+    isLoading: isLoadingUsers,
+    error: userError,
+    fetchUsers,
+  } = useUser();
 
-  const selectedChatData = chats.find((chat) => chat.id === selectedUser);
+  const selectedUserData = users.find((user) => user.id === selectedUser);
 
   const handleSave = React.useCallback(async () => {
     if (!selectedUser || !originalText || enhancedVersions.length === 0) return;
 
     try {
       const createData: CreateChatDto = {
-        name: selectedChatData?.name ?? "",
-        jobProfile: selectedChatData?.jobProfile ?? "",
+        name: selectedUserData?.name ?? "",
+        jobProfile: selectedUserData?.jobProfile ?? "",
         originalText,
         enhancedTexts: enhancedVersions.map((version) => ({
           text: version.text,
@@ -105,7 +106,7 @@ const Editor: React.FC = () => {
 
       await chatService.createChat(createData);
       setIsDirty(false);
-      await fetchChats();
+      await fetchUsers();
     } catch (error) {
       console.error("Error saving chat:", error);
       throw error;
@@ -114,8 +115,8 @@ const Editor: React.FC = () => {
     selectedUser,
     originalText,
     enhancedVersions,
-    selectedChatData,
-    fetchChats,
+    selectedUserData,
+    fetchUsers,
   ]);
 
   const { setHasChanges, saveState, scheduleSave } = useAutoSave({
@@ -137,8 +138,8 @@ const Editor: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    fetchChats();
-  }, [fetchChats]);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const updateCounts = (text: string) => {
     setCharCount(text.length);
@@ -241,24 +242,24 @@ const Editor: React.FC = () => {
         focus:ring-[#2684FF] focus:ring-opacity-25 min-w-[200px]
         justify-between"
     >
-      {isLoadingChats ? (
-        <span className="text-[#7A869A]">Loading chats...</span>
-      ) : chatError ? (
-        <span className="text-red-600">Error loading chats</span>
+      {isLoadingUsers ? (
+        <span className="text-[#7A869A]">Loading users...</span>
+      ) : userError ? (
+        <span className="text-red-600">Error loading users</span>
       ) : (
         <div className="flex items-center gap-2">
-          {selectedUser && selectedChatData ? (
+          {selectedUser && selectedUserData ? (
             <>
               <div
                 className="w-6 h-6 bg-[#DFE1E6] flex items-center 
                 justify-center text-[#42526E] text-xs font-medium"
               >
-                {selectedChatData.name.charAt(0)}
+                {selectedUserData.name.charAt(0)}
               </div>
-              <span>{selectedChatData.name}</span>
+              <span>{selectedUserData.name}</span>
             </>
           ) : (
-            <span className="text-[#7A869A]">Select a chat</span>
+            <span className="text-[#7A869A]">Select a user</span>
           )}
         </div>
       )}
@@ -267,6 +268,46 @@ const Editor: React.FC = () => {
           ${isDropdownOpen ? "transform rotate-180" : ""}`}
       />
     </button>
+  );
+
+  const dropdownMenu = isDropdownOpen && (
+    <div
+      className="absolute top-full left-0 mt-1 w-full bg-white border 
+      border-[#DFE1E6] shadow-lg z-40 py-1 max-h-60 overflow-y-auto"
+    >
+      {users.map((user) => (
+        <button
+          key={user.id}
+          onClick={() => {
+            setSelectedUser(user.id);
+            setIsDropdownOpen(false);
+          }}
+          className={`w-full flex items-center gap-2 px-3 py-2 text-sm
+          hover:bg-[#F4F5F7] transition-colors
+          ${
+            selectedUser === user.id
+              ? "bg-[#DEEBFF] text-[#0052CC]"
+              : "text-[#172B4D]"
+          }`}
+        >
+          <div
+            className={`w-6 h-6 flex items-center justify-center 
+            text-xs font-medium
+            ${
+              selectedUser === user.id
+                ? "bg-[#0052CC] text-white"
+                : "bg-[#DFE1E6] text-[#42526E]"
+            }`}
+          >
+            {user.name.charAt(0)}
+          </div>
+          <div className="flex-1 text-left">
+            <span className="block font-medium">{user.name}</span>
+            <span className="text-xs text-[#7A869A]">{user.jobProfile}</span>
+          </div>
+        </button>
+      ))}
+    </div>
   );
 
   return (
@@ -280,47 +321,7 @@ const Editor: React.FC = () => {
             </div>
             <div className="relative" ref={dropdownRef}>
               {dropdownButton}
-              {isDropdownOpen && (
-                <div
-                  className="absolute top-full left-0 mt-1 w-full bg-white border 
-                border-[#DFE1E6] shadow-lg z-40 py-1 max-h-60 overflow-y-auto"
-                >
-                  {chats.map((chat) => (
-                    <button
-                      key={chat.id}
-                      onClick={() => {
-                        setSelectedUser(chat.id);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm
-                      hover:bg-[#F4F5F7] transition-colors
-                      ${
-                        selectedUser === chat.id
-                          ? "bg-[#DEEBFF] text-[#0052CC]"
-                          : "text-[#172B4D]"
-                      }`}
-                    >
-                      <div
-                        className={`w-6 h-6 flex items-center justify-center 
-                      text-xs font-medium
-                      ${
-                        selectedUser === chat.id
-                          ? "bg-[#0052CC] text-white"
-                          : "bg-[#DFE1E6] text-[#42526E]"
-                      }`}
-                      >
-                        {chat.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <span className="block font-medium">{chat.name}</span>
-                        <span className="text-xs text-[#7A869A]">
-                          {chat.jobProfile}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {dropdownMenu}
             </div>
           </div>
           {selectedUser && <SaveStatus state={saveState} />}

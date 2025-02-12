@@ -5,15 +5,12 @@ import {
   FiMessageSquare,
   FiEdit3,
   FiTrash2,
-  FiClock,
-  FiCalendar,
-  FiBriefcase,
 } from "react-icons/fi";
 import CreateChatModal from "../modals/CreateChatModal";
 import ConfirmationModal from "../modals/ConfirmationModal";
-import { chatService } from "../../services/chatService";
-import type { Chat } from "../../types/chat";
-import { useChat } from "../../context/ChatContext";
+import { userService } from "../../services/userService";
+import type { User } from "../../services/userService";
+import { useUser } from "../../context/UserContext";
 import { capitalizeFirstLetters } from "../../utils/textFormatters";
 
 export type ActiveTab = "editor" | "history";
@@ -33,44 +30,44 @@ const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [deletingChatId, setDeletingChatId] = React.useState<string | null>(
+  const [deletingUserId, setDeletingUserId] = React.useState<string | null>(
     null
   );
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const { chats, setChats, isLoading, error, fetchChats } = useChat();
+  const { users, setUsers, isLoading, error, fetchUsers } = useUser();
 
   React.useEffect(() => {
-    fetchChats();
-  }, [fetchChats]);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     const timeoutId = setTimeout(() => {
-      fetchChats();
+      fetchUsers();
     }, 500);
     return () => clearTimeout(timeoutId);
   };
 
-  const handleChatCreated = async () => {
-    await fetchChats(); // Just refetch the chats after creation
+  const handleChatCreated = async (user: User) => {
+    await fetchUsers(); // Refresh the chat list after creating a new user
   };
 
-  const handleDeleteChat = async () => {
-    if (!deletingChatId) return;
+  const handleDeleteUser = async () => {
+    if (!deletingUserId) return;
 
     setIsDeleting(true);
     try {
-      await chatService.deleteChat(deletingChatId);
-      if (activeUserId === deletingChatId) {
+      await userService.deleteUser(deletingUserId);
+      if (activeUserId === deletingUserId) {
         onUserSelect(""); // Clear selected user if deleted
       }
-      await fetchChats(); // Fetch fresh chat list after deletion
+      await fetchUsers(); // Fetch fresh user list after deletion
     } catch (err) {
-      console.error("Error deleting chat:", err);
+      console.error("Error deleting user:", err);
     } finally {
       setIsDeleting(false);
-      setDeletingChatId(null);
+      setDeletingUserId(null);
     }
   };
 
@@ -152,36 +149,36 @@ const Navigation: React.FC<NavigationProps> = ({
         <div className="p-4">
           <h3 className="flex items-center text-xs font-medium text-[#42526E] mb-2 uppercase tracking-wide">
             <FiMessageSquare className="w-4 h-4 mr-2" />
-            <span>Recent Chats</span>
+            <span>Recent Users</span>
           </h3>
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-6 px-4">
               <div className="animate-spin h-6 w-6 border-2 border-[#0052CC] border-t-transparent" />
-              <p className="text-sm text-[#42526E] mt-2">Loading chats...</p>
+              <p className="text-sm text-[#42526E] mt-2">Loading users...</p>
             </div>
           ) : error ? (
             <div className="bg-red-50 text-red-600 p-3 text-sm text-center">
               {error}
             </div>
-          ) : chats.length === 0 ? (
+          ) : users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
               <div className="w-10 h-10 bg-[#DEEBFF] flex items-center justify-center mb-2">
                 <FiMessageSquare className="w-5 h-5 text-[#0052CC]" />
               </div>
-              <p className="text-sm text-[#42526E]">No chats found</p>
+              <p className="text-sm text-[#42526E]">No users found</p>
               <p className="text-xs text-[#7A869A] mt-1">
-                Create a new chat to get started
+                Create a new user to get started
               </p>
             </div>
           ) : (
             <ul className="space-y-1">
-              {chats.map((chat) => (
+              {users.map((user) => (
                 <li
-                  key={chat.id}
+                  key={user.id}
                   className={`group transition-all duration-200
                     ${
-                      activeUserId === chat.id
+                      activeUserId === user.id
                         ? "bg-[#DEEBFF]"
                         : "hover:bg-[#F4F5F7]"
                     }`}
@@ -189,34 +186,34 @@ const Navigation: React.FC<NavigationProps> = ({
                   <div className="flex items-center p-2">
                     <div
                       className="flex-1 flex items-center min-w-0 cursor-pointer"
-                      onClick={() => onUserSelect(chat.id)}
+                      onClick={() => onUserSelect(user.id)}
                     >
                       <div className="relative">
                         <div
                           className={`w-8 h-8 flex items-center justify-center text-sm font-medium
                             transition-colors duration-200
                             ${
-                              activeUserId === chat.id
+                              activeUserId === user.id
                                 ? "bg-[#0052CC] text-white"
                                 : "bg-[#DFE1E6] text-[#42526E] group-hover:bg-[#0052CC] group-hover:text-white"
                             }`}
                         >
-                          {capitalizeFirstLetters(chat.name).charAt(0)}
+                          {capitalizeFirstLetters(user.name).charAt(0)}
                         </div>
                       </div>
                       <div className="ml-3 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-[#172B4D] truncate">
-                            {capitalizeFirstLetters(chat.name)}
+                            {capitalizeFirstLetters(user.name)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-[#7A869A]">
                           <span className="truncate">
-                            {capitalizeFirstLetters(chat.jobProfile)}
+                            {capitalizeFirstLetters(user.jobProfile)}
                           </span>
                           <span className="text-[#DFE1E6]">•</span>
                           <span className="whitespace-nowrap">
-                            {new Date(chat.created_at).toLocaleDateString()}
+                            {new Date(user.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -224,12 +221,12 @@ const Navigation: React.FC<NavigationProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setDeletingChatId(chat.id);
+                        setDeletingUserId(user.id);
                       }}
                       className="p-1.5 text-[#42526E] hover:bg-[#FF563014] hover:text-[#FF5630] 
                         transition-colors opacity-0 group-hover:opacity-100
                         focus:opacity-100 focus:outline-none"
-                      title="Delete chat"
+                      title="Delete user"
                     >
                       <FiTrash2 className="w-4 h-4" />
                     </button>
@@ -249,11 +246,11 @@ const Navigation: React.FC<NavigationProps> = ({
       />
 
       <ConfirmationModal
-        isOpen={!!deletingChatId}
-        onClose={() => setDeletingChatId(null)}
-        onConfirm={handleDeleteChat}
-        title="Delete Chat"
-        message="Are you sure you want to delete this chat? This action cannot be undone."
+        isOpen={!!deletingUserId}
+        onClose={() => setDeletingUserId(null)}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
         isLoading={isDeleting}
       />
     </nav>

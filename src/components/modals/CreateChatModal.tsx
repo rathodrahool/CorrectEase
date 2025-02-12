@@ -1,12 +1,12 @@
 import React from "react";
 import { FiX } from "react-icons/fi";
-import { chatService } from "../../services/chatService";
-import type { Chat } from "../../types/chat";
+import { userService } from "../../services/userService";
+import type { User } from "../../services/userService";
 
 interface CreateChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onChatCreated: (chats: Chat[]) => void;
+  onChatCreated: (user: User) => void;
 }
 
 const CreateChatModal: React.FC<CreateChatModalProps> = ({
@@ -27,28 +27,18 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({
     setError(null);
 
     try {
-      // First create the chat
-      await chatService.createChat({
+      const user = await userService.createUser({
         name,
         jobProfile,
       });
 
-      // Then fetch updated chat list
-      const response = await chatService.getChats({
-        limit: 10,
-        offset: 0,
-        order: { created_at: "DESC" },
-      });
-
-      // Update parent component with new chat list
-      onChatCreated(response.data);
-
+      onChatCreated(user);
       setName("");
       setJobProfile("");
       onClose();
     } catch (err) {
-      setError("Failed to create chat. Please try again.");
-      console.error("Create chat error:", err);
+      setError("Failed to create user. Please try again.");
+      console.error("Create user error:", err);
     } finally {
       setIsLoading(false);
     }
