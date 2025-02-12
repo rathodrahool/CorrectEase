@@ -95,8 +95,6 @@ const Editor: React.FC = () => {
 
     try {
       const createData: CreateChatDto = {
-        name: selectedUserData?.name ?? "",
-        jobProfile: selectedUserData?.jobProfile ?? "",
         originalText,
         enhancedTexts: enhancedVersions.map((version) => ({
           text: version.text,
@@ -104,20 +102,13 @@ const Editor: React.FC = () => {
         })),
       };
 
-      await chatService.createChat(createData);
+      await chatService.createChat(selectedUser, createData);
       setIsDirty(false);
-      await fetchUsers();
     } catch (error) {
       console.error("Error saving chat:", error);
       throw error;
     }
-  }, [
-    selectedUser,
-    originalText,
-    enhancedVersions,
-    selectedUserData,
-    fetchUsers,
-  ]);
+  }, [selectedUser, originalText, enhancedVersions]);
 
   const { setHasChanges, saveState, scheduleSave } = useAutoSave({
     onSave: handleSave,

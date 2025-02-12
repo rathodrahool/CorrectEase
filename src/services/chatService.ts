@@ -1,31 +1,57 @@
 import api from "./api";
-import {
-  CreateChatDto,
-  ChatResponse,
-  ChatListResponse,
-  ChatListParams,
-} from "../types/chat";
+
+export interface CreateChatDto {
+  originalText: string;
+  enhancedTexts?: {
+    text: string;
+    type: string;
+  }[];
+}
+
+export interface ChatResponse {
+  id: string;
+  originalText: string;
+  enhancedTexts: {
+    text: string;
+    type: string;
+  }[];
+  created_at: string;
+  updated_at: string;
+}
 
 export const chatService = {
-  createChat: async (data: CreateChatDto): Promise<ChatResponse> => {
-    const response = await api.post<ChatResponse>("/chat", data);
+  createChat: async (
+    userId: string,
+    data: CreateChatDto
+  ): Promise<ChatResponse> => {
+    const response = await api.post<ChatResponse>(`/chat/user/${userId}`, data);
     return response.data;
   },
 
-  getChats: async (params: ChatListParams = {}): Promise<ChatListResponse> => {
-    const response = await api.get<ChatListResponse>("/chat", { params });
+  getUserChats: async (userId: string): Promise<ChatResponse[]> => {
+    const response = await api.get<ChatResponse[]>(`/chat/user/${userId}`);
     return response.data;
   },
 
-  deleteChat: async (chatId: string): Promise<void> => {
-    await api.delete(`/chat/${chatId}`);
+  getChatById: async (
+    userId: string,
+    chatId: string
+  ): Promise<ChatResponse> => {
+    const response = await api.get<ChatResponse>(
+      `/chat/user/${userId}/chat/${chatId}`
+    );
+    return response.data;
   },
 
   updateChat: async (
+    userId: string,
     chatId: string,
     data: Partial<CreateChatDto>
   ): Promise<ChatResponse> => {
-    const response = await api.patch<ChatResponse>(`/chat/${chatId}`, data);
+    const response = await api.patch<ChatResponse>(
+      `/chat/user/${userId}/chat/${chatId}`,
+      data
+    );
     return response.data;
   },
 };

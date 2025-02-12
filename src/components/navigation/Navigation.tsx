@@ -12,6 +12,7 @@ import { userService } from "../../services/userService";
 import type { User } from "../../services/userService";
 import { useUser } from "../../context/UserContext";
 import { capitalizeFirstLetters } from "../../utils/textFormatters";
+import { useChat } from "../../context/ChatContext";
 
 export type ActiveTab = "editor" | "history";
 
@@ -36,6 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const { users, setUsers, isLoading, error, fetchUsers } = useUser();
+  const { fetchUserChats, setCurrentUserId } = useChat();
 
   React.useEffect(() => {
     fetchUsers();
@@ -69,6 +71,12 @@ const Navigation: React.FC<NavigationProps> = ({
       setIsDeleting(false);
       setDeletingUserId(null);
     }
+  };
+
+  const handleUserSelect = async (userId: string) => {
+    onUserSelect(userId);
+    setCurrentUserId(userId);
+    await fetchUserChats(userId);
   };
 
   return (
@@ -186,7 +194,7 @@ const Navigation: React.FC<NavigationProps> = ({
                   <div className="flex items-center p-2">
                     <div
                       className="flex-1 flex items-center min-w-0 cursor-pointer"
-                      onClick={() => onUserSelect(user.id)}
+                      onClick={() => handleUserSelect(user.id)}
                     >
                       <div className="relative">
                         <div

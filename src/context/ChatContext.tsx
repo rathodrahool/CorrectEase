@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { Chat, ChatListParams } from "../types/chat";
-import { chatService } from "../services/chatService";
+import { chatService, ChatResponse } from "../services/chatService";
 
 interface ChatContextType {
-  chats: Chat[];
+  chats: ChatResponse[];
+  setChats: React.Dispatch<React.SetStateAction<ChatResponse[]>>;
   isLoading: boolean;
   error: string | null;
-  fetchChats: () => Promise<void>;
+  fetchUserChats: (userId: string) => Promise<void>;
+  currentUserId: string | null;
+  setCurrentUserId: (userId: string | null) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -14,20 +16,17 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [chats, setChats] = useState<ChatResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const fetchChats = useCallback(async () => {
+  const fetchUserChats = useCallback(async (userId: string) => {
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await chatService.getChats({
-        limit: 10,
-        offset: 0,
-        order: { created_at: "DESC" },
-      });
-      setChats(response.data);
-      setError(null);
+      const response = await chatService.getUserChats(userId);
+      setChats(response);
     } catch (err) {
       setError("Failed to load chats");
       console.error("Error fetching chats:", err);
@@ -37,7 +36,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <ChatContext.Provider value={{ chats, isLoading, error, fetchChats }}>
+    <ChatContext.Provider
+      value={{
+        chats,
+        setChats,
+        isLoading,
+        error,
+        fetchUserChats,
+        currentUserId,
+        setCurrentUserId,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );
