@@ -143,10 +143,31 @@ const Editor: React.FC = () => {
     setWordCount(text.trim() === "" ? 0 : text.trim().split(/\s+/).length);
   };
 
-  const handleTextChange = React.useCallback((text: string) => {
-    setOriginalText(text);
-    updateCounts(text);
-  }, []);
+  const getStorageKey = (userId: string) => `userText_${userId}`;
+
+  React.useEffect(() => {
+    if (selectedUser) {
+      const savedText = localStorage.getItem(getStorageKey(selectedUser));
+      if (savedText) {
+        setOriginalText(savedText);
+        updateCounts(savedText);
+      } else {
+        setOriginalText("");
+        updateCounts("");
+      }
+    }
+  }, [selectedUser]);
+
+  const handleTextChange = React.useCallback(
+    (text: string) => {
+      setOriginalText(text);
+      updateCounts(text);
+      if (selectedUser) {
+        localStorage.setItem(getStorageKey(selectedUser), text);
+      }
+    },
+    [selectedUser]
+  );
 
   const handleEnhance = async () => {
     setIsEnhancing(true);
