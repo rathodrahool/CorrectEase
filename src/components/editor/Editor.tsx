@@ -132,6 +132,12 @@ const Editor: React.FC = () => {
     fetchUsers();
   }, [fetchUsers]);
 
+  React.useEffect(() => {
+    if (users.length > 0 && !selectedUser) {
+      setSelectedUser(users[0].id);
+    }
+  }, [users, selectedUser]);
+
   const updateCounts = (text: string) => {
     setCharCount(text.length);
     setWordCount(text.trim() === "" ? 0 : text.trim().split(/\s+/).length);
