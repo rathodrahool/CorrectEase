@@ -45,11 +45,17 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    const timeoutId = setTimeout(() => {
-      fetchUsers();
-    }, 500);
-    return () => clearTimeout(timeoutId);
   };
+
+  const filteredUsers = React.useMemo(() => {
+    if (!searchTerm) return users;
+
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.jobProfile.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
   const handleChatCreated = async (user: User) => {
     await fetchUsers(); // Refresh the chat list after creating a new user
@@ -169,7 +175,7 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="bg-red-50 text-red-600 p-3 text-sm text-center">
               {error}
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
               <div className="w-10 h-10 bg-[#DEEBFF] flex items-center justify-center mb-2">
                 <FiMessageSquare className="w-5 h-5 text-[#0052CC]" />
@@ -181,7 +187,7 @@ const Navigation: React.FC<NavigationProps> = ({
             </div>
           ) : (
             <ul className="space-y-1">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <li
                   key={user.id}
                   className={`group transition-all duration-200
