@@ -318,7 +318,7 @@ const CorrectionHistory: React.FC<CorrectionHistoryProps> = ({ userId }) => {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-xs text-[#7A869A]">
+                    <label className="text-xs font-semibold text-[#0052CC]">
                       Enhanced Versions
                     </label>
                     {chat.enhancedTexts.map((enhanced, index) => (
@@ -341,7 +341,7 @@ const CorrectionHistory: React.FC<CorrectionHistoryProps> = ({ userId }) => {
                             )}
                           </button>
                         </div>
-                        <p className="text-sm text-[#172B4D] p-2 bg-[#DEEBFF] rounded-sm">
+                        <p className="text-sm text-[#172B4D] p-2 bg-[#DEEBFF]/40 rounded-sm border border-[#DEEBFF] shadow-sm">
                           {enhanced.text}
                         </p>
                       </div>
