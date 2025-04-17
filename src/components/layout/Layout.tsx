@@ -6,7 +6,11 @@ import Settings from "../settings/Settings";
 import Profile from "../profile/Profile";
 import { FiSettings, FiUser } from "react-icons/fi";
 
-const Layout: React.FC = () => {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("editor");
   const [activeUserId, setActiveUserId] = React.useState<string>("");
   const [showSettings, setShowSettings] = React.useState(false);
@@ -96,7 +100,7 @@ const Layout: React.FC = () => {
           </div>
         </header>
         <main className="flex-1 overflow-auto relative z-10">
-          {renderMainContent()}
+          {children}
         </main>
       </div>
     </div>

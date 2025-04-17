@@ -9,7 +9,7 @@ interface AutoSaveConfig {
 export const useAutoSave = ({ onSave, delay = 5000 }: AutoSaveConfig) => {
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const hasUnsavedChanges = useRef(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<number>();
 
   const save = useCallback(async () => {
     if (!hasUnsavedChanges.current) return;

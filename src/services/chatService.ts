@@ -1,26 +1,19 @@
 import api from "./api";
 import { Chat } from "../types/chat";
-
-export interface CreateChatDto {
-  originalText: string;
-  enhancedTexts?: {
-    text: string;
-    type: string;
-  }[];
-}
+import { CreateChatDto } from "../types/dto";
 
 export interface ChatResponse {
   id: string;
   originalText: string;
   enhancedTexts: {
     text: string;
-    type: string;
+    style: string;
   }[];
   created_at: string;
   updated_at: string;
 }
 
-interface ChatListResponse {
+export interface ChatListResponse {
   message: string;
   total: number;
   limit: number;

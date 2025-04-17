@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { chatService, ChatResponse } from "../services/chatService";
+import { chatService, ChatResponse, ChatListResponse } from "../services/chatService";
+import { Chat } from "../types/chat";
 
 interface ChatContextType {
-  chats: ChatResponse[];
-  setChats: React.Dispatch<React.SetStateAction<ChatResponse[]>>;
+  chats: Chat[];
+  setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
   isLoading: boolean;
   error: string | null;
   fetchUserChats: (userId: string) => Promise<void>;
@@ -16,7 +17,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [chats, setChats] = useState<ChatResponse[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -26,7 +27,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
     try {
       const response = await chatService.getUserChats(userId);
-      setChats(response);
+      setChats(response.data);
     } catch (err) {
       setError("Failed to load chats");
       console.error("Error fetching chats:", err);

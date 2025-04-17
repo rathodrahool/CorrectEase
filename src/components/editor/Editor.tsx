@@ -17,6 +17,7 @@ import { useAutoSave } from "../../hooks/useAutoSave";
 import SaveStatus from "../common/SaveStatus";
 import { useUser } from "../../context/UserContext";
 import type { User } from "../../types/user";
+import type { CreateChatDto } from "../../types/dto";
 
 interface CorrectionStyle {
   id: string;
@@ -39,6 +40,10 @@ interface EnhancedVersion {
   style: string;
 }
 
+interface EditorProps {
+  activeUserId?: string;
+}
+
 const correctionStyles: CorrectionStyle[] = [
   {
     id: "standard",
@@ -54,7 +59,7 @@ const correctionStyles: CorrectionStyle[] = [
   { id: "concise", name: "Concise", description: "Short and to the point" },
 ];
 
-const Editor: React.FC = () => {
+const Editor: React.FC<EditorProps> = ({ activeUserId }) => {
   const [selectedStyle, setSelectedStyle] = React.useState("standard");
   const [selectedUser, setSelectedUser] = React.useState("");
   const [originalText, setOriginalText] = React.useState("");
@@ -98,8 +103,9 @@ const Editor: React.FC = () => {
         originalText,
         enhancedTexts: enhancedVersions.map((version) => ({
           text: version.text,
-          type: version.style,
+          style: version.style,
         })),
+        userId: selectedUser,
       };
 
       await chatService.createChat(selectedUser, createData);
