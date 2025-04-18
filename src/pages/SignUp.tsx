@@ -6,6 +6,8 @@ import {
   FiArrowRight,
   FiEye,
   FiEyeOff,
+  FiCheck,
+  FiX,
 } from "react-icons/fi";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/auth.service";
@@ -16,19 +18,46 @@ const SignUp: React.FC = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "", // Add this field
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState({
     password: false,
     confirmPassword: false,
   });
-  const [error, setError] = React.useState(""); // Add error state
+  const [error, setError] = React.useState("");
+  const [passwordValidation, setPasswordValidation] = React.useState({
+    length: false,
+    uppercase: false,
+    number: false,
+    specialChar: false,
+  });
+
+  // Add password validation function
+  const validatePassword = (password: string) => {
+    setPasswordValidation({
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      specialChar: /[!@#$%^&*]/.test(password),
+    });
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setFormData({ ...formData, password: newPassword });
+    validatePassword(newPassword);
+    setError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords don't match");
+      return;
+    }
+    if (!Object.values(passwordValidation).every(Boolean)) {
+      setError("Please meet all password requirements");
       return;
     }
     setError("");
@@ -81,13 +110,6 @@ const SignUp: React.FC = () => {
     return true;
   };
 
-  // Add password validation on change
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setFormData({ ...formData, password: newPassword });
-    setError(""); // Clear previous errors
-  };
-
   return (
     <div className="min-h-screen bg-[#FAFBFC] flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto p-6">
@@ -121,8 +143,8 @@ const SignUp: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
                   }
-                  className="w-full pl-10 pr-3 py-2 border border-[#DFE1E6] rounded-sm
-                    focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-sm
+                    focus:ring-2 focus:ring-opacity-25 focus:border-gray-300 focus:ring-gray-300"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -141,8 +163,8 @@ const SignUp: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full pl-10 pr-3 py-2 border border-[#DFE1E6] rounded-sm
-                    focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-sm
+                    focus:ring-2 focus:ring-opacity-25 focus:border-gray-300 focus:ring-gray-300"
                   placeholder="Enter your email address"
                 />
               </div>
@@ -159,11 +181,16 @@ const SignUp: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={handlePasswordChange}
-                  onBlur={() => validateForm()}
-                  className="w-full pl-10 pr-12 py-2 border border-[#DFE1E6] rounded-sm
-                    focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
+                  className={`w-full pl-10 pr-12 py-2 border rounded-sm
+                    focus:ring-2 focus:ring-opacity-25
+                    ${
+                      formData.password
+                        ? Object.values(passwordValidation).every(Boolean)
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-gray-300 focus:ring-gray-300"
+                    }`}
                   placeholder="Create a secure password"
-                  minLength={8}
                 />
                 <button
                   type="button"
@@ -182,13 +209,25 @@ const SignUp: React.FC = () => {
                   )}
                 </button>
               </div>
-              <div className="text-xs text-[#7A869A] space-y-1 mt-1">
-                <p>Password must:</p>
-                <ul className="list-disc pl-4">
-                  <li>Be at least 8 characters long</li>
-                  <li>Include at least one uppercase letter</li>
-                  <li>Include at least one number</li>
-                  <li>Include at least one special character (!@#$%^&*)</li>
+              <div className="text-xs space-y-1 mt-1">
+                <p className="text-[#7A869A]">Password must:</p>
+                <ul className="space-y-1">
+                  <li className={`flex items-center gap-1 ${passwordValidation.length ? "text-green-600" : "text-red-600"}`}>
+                    {passwordValidation.length ? <FiCheck className="w-4 h-4" /> : <FiX className="w-4 h-4" />}
+                    Be at least 8 characters long
+                  </li>
+                  <li className={`flex items-center gap-1 ${passwordValidation.uppercase ? "text-green-600" : "text-red-600"}`}>
+                    {passwordValidation.uppercase ? <FiCheck className="w-4 h-4" /> : <FiX className="w-4 h-4" />}
+                    Include at least one uppercase letter
+                  </li>
+                  <li className={`flex items-center gap-1 ${passwordValidation.number ? "text-green-600" : "text-red-600"}`}>
+                    {passwordValidation.number ? <FiCheck className="w-4 h-4" /> : <FiX className="w-4 h-4" />}
+                    Include at least one number
+                  </li>
+                  <li className={`flex items-center gap-1 ${passwordValidation.specialChar ? "text-green-600" : "text-red-600"}`}>
+                    {passwordValidation.specialChar ? <FiCheck className="w-4 h-4" /> : <FiX className="w-4 h-4" />}
+                    Include at least one special character (!@#$%^&*)
+                  </li>
                 </ul>
               </div>
             </div>
@@ -209,10 +248,16 @@ const SignUp: React.FC = () => {
                       confirmPassword: e.target.value,
                     })
                   }
-                  className="w-full pl-10 pr-12 py-2 border border-[#DFE1E6] rounded-sm
-                    focus:border-[#2684FF] focus:ring-2 focus:ring-[#2684FF] focus:ring-opacity-25"
+                  className={`w-full pl-10 pr-12 py-2 border rounded-sm
+                    focus:ring-2 focus:ring-opacity-25
+                    ${
+                      formData.confirmPassword
+                        ? formData.password === formData.confirmPassword
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-gray-300 focus:ring-gray-300"
+                    }`}
                   placeholder="Confirm your password"
-                  minLength={8}
                 />
                 <button
                   type="button"
